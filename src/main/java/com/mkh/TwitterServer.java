@@ -90,6 +90,8 @@ public class TwitterServer {
                 response = AuthResponse.newBuilder().setValue(AuthResult.not_found_VALUE).build();
             }
 
+            System.out.println("Responding back...");
+
             responseObserver.onNext(response);
             responseObserver.onCompleted();
         }
