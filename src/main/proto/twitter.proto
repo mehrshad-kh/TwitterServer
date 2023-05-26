@@ -15,7 +15,7 @@ service Twitter {
 }
 
 message AuthResponse {
-  int32 value = 1;
+  AuthResult result = 1;
 }
 
 message User {
