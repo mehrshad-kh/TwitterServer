@@ -84,9 +84,9 @@ public class TwitterServer {
         public void authenticate(User user, StreamObserver<AuthResponse> responseObserver) {
             AuthResponse response;
             if (user.getFirstName().equals("Mehrshad")) {
-                response = AuthResponse.newBuilder().setValue(AuthResult.granted_VALUE).build();
+                response = AuthResponse.newBuilder().setResult(AuthResult.GRANTED).build();
             } else {
-                response = AuthResponse.newBuilder().setValue(AuthResult.not_found_VALUE).build();
+                response = AuthResponse.newBuilder().setResult(AuthResult.NOT_FOUND).build();
             }
 
             System.out.println("Responding back...");
