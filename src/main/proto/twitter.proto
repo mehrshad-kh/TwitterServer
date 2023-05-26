@@ -11,6 +11,7 @@ package twitter;
 
 service Twitter {
   rpc authenticate(User) returns (AuthResponse) {}
+  rpc getDailyBriefing(User) returns (stream Tweet) {}
 }
 
 message AuthResponse {
@@ -19,20 +20,28 @@ message AuthResponse {
 
 message User {
   int32 id = 1;
-  string firstName = 2;
-  string lastName = 3;
+  string first_name = 2;
+  string last_name = 3;
   string username = 4;
   string password = 5;
   string email = 6;
-  string phoneNumber = 7;
+  string phone_number = 7;
   // Not sure.
-  int32 countryId = 8; 
+  int32 country_id = 8;
   google.protobuf.Timestamp birthdate = 9;
   string bio = 10;
   string location = 11;
   string website = 12;
-  google.protobuf.Timestamp dateCreated = 13;
-  google.protobuf.Timestamp dateLastModified = 14;
+  google.protobuf.Timestamp date_created = 13;
+  google.protobuf.Timestamp date_last_modified = 14;
+}
+
+message Tweet {
+  int32 id = 1;
+  string text = 2;
+  int32 photo_id = 3;
+  int32 tweet_id = 4;
+  google.protobuf.Timestamp date_created = 5;
 }
 
 enum AuthResult {
