@@ -1,16 +1,15 @@
 package com.mkh;
 
-import com.mkh.twitter.AuthResponse;
-import com.mkh.twitter.AuthResult;
-import com.mkh.twitter.TwitterGrpc;
-import com.mkh.twitter.User;
+import com.mkh.twitter.*;
 import io.grpc.Grpc;
 import io.grpc.InsecureServerCredentials;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
+import org.checkerframework.checker.units.qual.A;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -93,6 +92,21 @@ public class TwitterServer {
             System.out.println("Responding back...");
 
             responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        }
+
+        @Override
+        public void getDailyBriefing(User user, StreamObserver<Tweet> responseObserver) {
+            ArrayList<Tweet> tweets = new ArrayList<>();
+
+            for (int i = 0; i < 3; i++) {
+                tweets.add(Tweet.newBuilder().setText("Hello, folks! This is Tweet number " + (i + 1) + "!").build());
+            }
+
+            for (Tweet tweet : tweets) {
+                responseObserver.onNext(tweet);
+            }
+
             responseObserver.onCompleted();
         }
     }
