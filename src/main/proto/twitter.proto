@@ -1,0 +1,43 @@
+// Copyright 2023 Mehrshad Khansarian & Amirsalar Abedini
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.mkh.twitter";
+option java_outer_classname = "TwitterProto";
+
+import "google/protobuf/timestamp.proto";
+
+package twitter;
+
+service Twitter {
+  rpc authenticate(User) returns (AuthResponse) {}
+}
+
+message AuthResponse {
+  int32 value = 1;
+}
+
+message User {
+  int32 id = 1;
+  string firstName = 2;
+  string lastName = 3;
+  string username = 4;
+  string password = 5;
+  string email = 6;
+  string phoneNumber = 7;
+  // Not sure.
+  int32 countryId = 8; 
+  google.protobuf.Timestamp birthdate = 9;
+  string bio = 10;
+  string location = 11;
+  string website = 12;
+  google.protobuf.Timestamp dateCreated = 13;
+  google.protobuf.Timestamp dateLastModified = 14;
+}
+
+enum AuthResult {
+  invalid_pass = 0;
+  not_found = 1;
+  granted = 2;
+}
+
