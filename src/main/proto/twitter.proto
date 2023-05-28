@@ -12,6 +12,7 @@ package twitter;
 service Twitter {
   rpc Authenticate(User) returns (AuthResponse) {}
   rpc GetDailyBriefing(User) returns (stream Tweet) {}
+  rpc SignUp(User) returns (User) {}
 }
 
 message AuthResponse {

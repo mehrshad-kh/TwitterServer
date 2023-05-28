@@ -109,5 +109,9 @@ public class TwitterServer {
 
             responseObserver.onCompleted();
         }
+        @Override
+        public void signUp(User user, StreamObserver<User> responseObserver){
+
+        }
     }
 }
