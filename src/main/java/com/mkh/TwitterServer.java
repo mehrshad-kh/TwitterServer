@@ -114,6 +114,7 @@ public class TwitterServer {
 
             responseObserver.onCompleted();
         }
+
         @Override
         public void signUp(User user, StreamObserver<User> responseObserver) {
             String query = "INSERT INTO Users (" +
@@ -124,7 +125,6 @@ public class TwitterServer {
 
             // Incomplete exception handling.
             // Handle taken username, email, etc.
-
          try {
              connection =  DriverManager.getConnection("jdbc:postgresql://localhost:5432/"+"test","postgresql","1234");
 
@@ -136,7 +136,7 @@ public class TwitterServer {
              preparedStatement.setString(5, user.getEmail());
              preparedStatement.setString(6, user.getPhoneNumber());
              preparedStatement.setInt(7, user.getCountryId());
-             // Check Timestamp.toString().
+             // Possible error: check Timestamp.toString().
              preparedStatement.setString(8, user.getBirthdate().toString());
              preparedStatement.setString(9, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now()));
              preparedStatement.setString(10, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now()));
