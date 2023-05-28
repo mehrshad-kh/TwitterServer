@@ -7,8 +7,12 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 import org.checkerframework.checker.units.qual.A;
-
+import  java.sql.*;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -18,6 +22,7 @@ public class TwitterServer {
 
     private final int port;
     private final Server server;
+
 
     public TwitterServer(int port) throws IOException {
         this(port, "extra");
@@ -110,8 +115,37 @@ public class TwitterServer {
             responseObserver.onCompleted();
         }
         @Override
-        public void signUp(User user, StreamObserver<User> responseObserver){
+        public void signUp(User user, StreamObserver<User> responseObserver) {
+            String query = "INSERT INTO Users (" +
+                    "first_name, last_name, username, password, email, " +
+                    "phone_number,country_id, birthday, date_created, date_last_modified) " +
+                    "VAlUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+            Connection connection;
 
+            // Incomplete exception handling.
+            // Handle taken username, email, etc.
+
+         try {
+             connection =  DriverManager.getConnection("jdbc:postgresql://localhost:5432/"+"test","postgresql","1234");
+
+             PreparedStatement preparedStatement = connection.prepareStatement(query);
+             preparedStatement.setString(1, user.getFirstName());
+             preparedStatement.setString(2, user.getLastName());
+             preparedStatement.setString(3, user.getUsername());
+             preparedStatement.setString(4, user.getPassword());
+             preparedStatement.setString(5, user.getEmail());
+             preparedStatement.setString(6, user.getPhoneNumber());
+             preparedStatement.setInt(7, user.getCountryId());
+             // Check Timestamp.toString().
+             preparedStatement.setString(8, user.getBirthdate().toString());
+             preparedStatement.setString(9, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now()));
+             preparedStatement.setString(10, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now()));
+         } catch (Exception e) {
+             e.printStackTrace();
+             return;
+         }
+
+         // responseObserver.onNext();
         }
     }
 }
