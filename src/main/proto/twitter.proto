@@ -14,16 +14,30 @@ service Twitter {
   rpc IsTakenUsername(MKString) returns (MKBoolean) {}
   rpc IsTakenEmail(MKString) returns (MKBoolean) {}
   rpc IsTakenPhoneNumber(MKString) returns (MKBoolean) {}
+  rpc SetProfilePhoto(ProfilePhoto) returns (MKBoolean) {}
 }
 
+// Change result to value.
 message AuthResponse {
   AuthResult result = 1;
 }
+
 message MKString {
   string value = 1; 
 }
+
 message MKBoolean {
   bool value = 1;
+}
+
+message MKPhoto {
+  bytes file_bytes = 1;
+  string extension = 2;
+}
+
+message ProfilePhoto {
+  int32 user_id = 1;
+  MKPhoto photo = 2;
 }
 
 message User {
