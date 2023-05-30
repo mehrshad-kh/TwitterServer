@@ -118,7 +118,6 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, phoneNumber.getValue());
             ResultSet resultSet = statement.executeQuery();
-            resultSet.next();
             if (resultSet.next()){
                 result = true;
             } else{
@@ -170,7 +169,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             statement.setDate(8, java.sql.Date.valueOf(user.getBirthdate()));
             statement.setTimestamp(9, Timestamp.valueOf(now));
             statement.setTimestamp(10, Timestamp.valueOf(now));
-            statement.executeUpdate();
+            statement.execute();
             String selectQuery = "SELECT id " +
                     "FROM users " +
                     "WHERE username = ? ";
