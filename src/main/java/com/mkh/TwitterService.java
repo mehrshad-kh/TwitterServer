@@ -57,6 +57,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         responseObserver.onCompleted();
     }
 
+
     @Override
     public void signUp(User user, StreamObserver<User> responseObserver) {
         // LocalDateTime now = LocalDateTime.parse(dateTimeFormatter.format(LocalDateTime.now(ZoneOffset.UTC)));
@@ -100,16 +101,16 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             ResultSet resultSet =  statement.executeQuery();
             resultSet.next();
             id = resultSet.getInt("id");
+            resultSet.close();
+            statement.close();
 
         } catch (SQLException e) {
             e.printStackTrace();
             return;
         }
-
         User registeredUser = user.toBuilder()
                 .setId(id)
                 .build();
-
         responseObserver.onNext(registeredUser);
         responseObserver.onCompleted();
     }
