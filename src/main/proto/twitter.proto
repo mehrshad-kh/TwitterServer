@@ -2,7 +2,7 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-option java_package = "com.mkh.twitter";
+option java_package = "com.MKh.twitter";
 option java_outer_classname = "TwitterProto";
 
 package twitter;
@@ -11,10 +11,19 @@ service Twitter {
   rpc Authenticate(User) returns (AuthResponse) {}
   rpc GetDailyBriefing(User) returns (stream Tweet) {}
   rpc SignUp(User) returns (User) {}
+  rpc IsTakenUsername(MKString) returns (MKBoolean) {}
+  rpc IsTakenEmail(MKString) returns (MKBoolean) {}
+  rpc IsTakenPhoneNumber(MKString) returns (MKBoolean) {}
 }
 
 message AuthResponse {
   AuthResult result = 1;
+}
+message MKString {
+  string value = 1; 
+}
+message MKBoolean {
+  bool value = 1;
 }
 
 message User {
