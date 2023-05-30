@@ -56,13 +56,91 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
         responseObserver.onCompleted();
     }
+    @Override
+    public void isTakenUsername(MKString username, StreamObserver<MKBoolean> responseObserver) {
+        boolean result = false;
+        String query = "SELECT id " +
+                "FROM Users " +
+                "WHERE username = ?;";
+
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, username.getValue());
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                result = true;
+            } else {
+                result = false;
+            }
+
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        MKBoolean response = MKBoolean.newBuilder().setValue(result).build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+    @Override
+    public void isTakenEmail(MKString email, StreamObserver<MKBoolean> responseObserver){
+        boolean result = false;
+        String query = "SELECT id " +
+                "FROM Users " +
+                "Where email = ?;";
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, email.getValue());
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()){
+                result = true;
+            } else {
+                result = false;
+            }
+
+            statement.close();
+        } catch (SQLException e){
+            e.printStackTrace();
+            return;
+        }
+        MKBoolean response = MKBoolean.newBuilder().setValue(result).build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+    @Override
+    public void isTakenPhoneNumber(MKString phoneNumber,StreamObserver<MKBoolean> responseObserver  ){
+        boolean result;
+        String query = "SELECT id " +
+                "FROM Users "+
+                "WHERE phone_number = ?;";
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, phoneNumber.getValue());
+            ResultSet resultSet = statement.executeQuery();
+            resultSet.next();
+            if (resultSet.next()){
+                result = true;
+            } else{
+                result = false;
+            }
+            statement.close();
+
+        } catch (SQLException e){
+            e.printStackTrace();
+            return;
+        }
+        MKBoolean response = MKBoolean.newBuilder().setValue(result).build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+
+    }
 
 
     @Override
     public void signUp(User user, StreamObserver<User> responseObserver) {
         // LocalDateTime now = LocalDateTime.parse(dateTimeFormatter.format(LocalDateTime.now(ZoneOffset.UTC)));
         LocalDateTime now = LocalDateTime.now();
-
         int id;
         String query = "INSERT INTO Users (" +
                 "first_name, " +
@@ -101,9 +179,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             ResultSet resultSet =  statement.executeQuery();
             resultSet.next();
             id = resultSet.getInt("id");
-            resultSet.close();
             statement.close();
-
         } catch (SQLException e) {
             e.printStackTrace();
             return;
