@@ -1,5 +1,6 @@
 package com.mkh;
 
+import com.google.type.DateTime;
 import com.mkh.twitter.*;
 import io.grpc.stub.StreamObserver;
 
@@ -19,6 +20,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
     // Possible error: does it have to be final?
     private final Connection connection;
     private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+
 
     public TwitterService(Connection connection) {
         this.connection = connection;
@@ -56,8 +58,8 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
     @Override
     public void signUp(User user, StreamObserver<User> responseObserver) {
+        LocalDateTime localDateTime  = LocalDateTime.now();
         int id;
-
         String query = "INSERT INTO Users (" +
                 "first_name, " +
                 "last_name, " +
@@ -83,18 +85,20 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             statement.setString(5, user.getEmail());
             statement.setString(6, user.getPhoneNumber());
             statement.setInt(7, user.getCountryId());
-            // Possible error: check Timestamp.toString().
-            statement.setString(8, user.getBirthdate().toString());
+            // Possible error: check Timestamp.toString()
+            statement.setDate(8, new  java.sql.Date((new java.util.Date(user.getBirthdate()).getTime())));
             Instant now = Instant.now();
-            statement.setString(9, dateTimeFormatter.format(now));
-            statement.setString(10, dateTimeFormatter.format(now));
+            statement.setTimestamp(9,Timestamp.valueOf(localDateTime));
+            statement.setTimestamp(10,Timestamp.valueOf(localDateTime));
             statement.executeUpdate();
             String selectQuery = "SELECT id FROM users " +
                                 "where username = ? ";
             statement = connection.prepareStatement(selectQuery);
             statement.setString(1, user.getUsername());
             ResultSet resultSet =  statement.executeQuery();
+            resultSet.next();
             id = resultSet.getInt("id");
+
         } catch (SQLException e) {
             e.printStackTrace();
             return;

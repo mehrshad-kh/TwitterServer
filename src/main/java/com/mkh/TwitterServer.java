@@ -32,7 +32,7 @@ public class TwitterServer {
     public TwitterServer(ServerBuilder<?> serverBuilder, int port) throws SQLException {
         this.port = port;
         // Preferred: DataSource instead of DriverManager.
-        connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/twitterdb");
+        connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/twitterdb", "shared_user", "1234");
         server = serverBuilder.addService(new TwitterService(connection)).build();
     }
 

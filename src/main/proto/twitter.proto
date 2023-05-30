@@ -5,8 +5,6 @@ option java_multiple_files = true;
 option java_package = "com.mkh.twitter";
 option java_outer_classname = "TwitterProto";
 
-import "google/protobuf/timestamp.proto";
-
 package twitter;
 
 service Twitter {
@@ -29,12 +27,12 @@ message User {
   string phone_number = 7;
   // Not sure.
   int32 country_id = 8;
-  google.protobuf.Timestamp birthdate = 9;
-  optional string bio = 10;
-  optional string location = 11;
-  optional string website = 12;
-  google.protobuf.Timestamp date_created = 13;
-  google.protobuf.Timestamp date_last_modified = 14;
+  string birthdate = 9;
+  string bio = 10;
+  string location = 11;
+  string website = 12;
+  string date_created = 13;
+  string date_last_modified = 14;
 }
 
 message Tweet {
@@ -42,7 +40,7 @@ message Tweet {
   string text = 2;
   int32 photo_id = 3;
   int32 tweet_id = 4;
-  google.protobuf.Timestamp date_created = 5;
+  string date_created = 5;
 }
 
 enum AuthResult {
