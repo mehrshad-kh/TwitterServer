@@ -1,4 +1,4 @@
-INSERT INTO Countries (id, iso, name, nice_name, iso3, num_code, phone_code)
+INSERT INTO countries (id, iso, name, nice_name, iso3, num_code, phone_code)
 VALUES 
 (1, 'AF', 'AFGHANISTAN', 'Afghanistan', 'AFG', 4, 93),
 (2, 'AL', 'ALBANIA', 'Albania', 'ALB', 8, 355),
