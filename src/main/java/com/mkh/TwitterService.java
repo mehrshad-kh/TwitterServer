@@ -5,6 +5,7 @@ import com.mkh.twitter.*;
 import io.grpc.stub.StreamObserver;
 
 import java.sql.*;
+import java.text.DateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -87,7 +88,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             statement.setString(5, user.getEmail());
             statement.setString(6, user.getPhoneNumber());
             statement.setInt(7, user.getCountryId());
-            statement.setDate(8, new java.sql.Date((new java.util.Date(user.getBirthdate()).getTime())));
+            statement.setDate(8, java.sql.Date.valueOf(user.getBirthdate()));
             statement.setTimestamp(9, Timestamp.valueOf(now));
             statement.setTimestamp(10, Timestamp.valueOf(now));
             statement.executeUpdate();
