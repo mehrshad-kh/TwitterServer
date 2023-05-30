@@ -1,6 +1,11 @@
 CREATE TABLE IF NOT EXISTS Countries (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(50)
+    iso CHAR(2),
+    name VARCHAR(100),
+    nice_name VARCHAR(100),
+    iso3 CHAR(3),
+    num_code INTEGER,
+    phone_code INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS Users (
