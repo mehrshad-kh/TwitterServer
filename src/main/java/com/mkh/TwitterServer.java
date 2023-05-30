@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class TwitterServer {
@@ -22,19 +23,17 @@ public class TwitterServer {
 
     private final int port;
     private final Server server;
+    private final Connection connection;
 
-
-    public TwitterServer(int port) throws IOException {
-        this(port, "extra");
-    }
-
-    public TwitterServer(int port, String extra) {
+    public TwitterServer(int port) throws SQLException {
         this(Grpc.newServerBuilderForPort(port, InsecureServerCredentials.create()), port);
     }
 
-    public TwitterServer(ServerBuilder<?> serverBuilder, int port) {
+    public TwitterServer(ServerBuilder<?> serverBuilder, int port) throws SQLException {
         this.port = port;
-        server = serverBuilder.addService(new TwitterService()).build();
+        // Preferred: DataSource instead of DriverManager.
+        connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/test");
+        server = serverBuilder.addService(new TwitterService(connection)).build();
     }
 
     /** Start serving requests. */
@@ -48,7 +47,7 @@ public class TwitterServer {
                 System.err.println("*** shutting down gRPC server since JVM is shutting down");
                 try {
                     TwitterServer.this.stop();
-                } catch (InterruptedException e) {
+                } catch (InterruptedException | SQLException e) {
                     e.printStackTrace(System.err);
                 }
                 System.err.println("*** server shut down");
@@ -57,8 +56,11 @@ public class TwitterServer {
     }
 
     /** Stop serving requests and shutdown resources. */
-    public void stop() throws InterruptedException {
+    public void stop() throws InterruptedException, SQLException {
         if (server != null) {
+            // Throws SQLException.
+            connection.close();
+            // Throws InterruptedException.
             server.shutdown().awaitTermination(30, TimeUnit.SECONDS);
         }
     }
@@ -79,73 +81,5 @@ public class TwitterServer {
         TwitterServer server = new TwitterServer(8080);
         server.start();
         server.blockUntilShutdown();
-    }
-
-    /**
-     * Our implementation of Twitter service.
-     */
-    private static class TwitterService extends TwitterGrpc.TwitterImplBase {
-        @Override
-        public void authenticate(User user, StreamObserver<AuthResponse> responseObserver) {
-            AuthResponse response;
-            if (user.getFirstName().equals("Mehrshad")) {
-                response = AuthResponse.newBuilder().setResult(AuthResult.GRANTED).build();
-            } else {
-                response = AuthResponse.newBuilder().setResult(AuthResult.NOT_FOUND).build();
-            }
-
-            System.out.println("Responding back...");
-
-            responseObserver.onNext(response);
-            responseObserver.onCompleted();
-        }
-
-        @Override
-        public void getDailyBriefing(User user, StreamObserver<Tweet> responseObserver) {
-            ArrayList<Tweet> tweets = new ArrayList<>();
-
-            for (int i = 0; i < 3; i++) {
-                tweets.add(Tweet.newBuilder().setText("Hello, folks! This is Tweet number " + (i + 1) + "!").build());
-            }
-
-            for (Tweet tweet : tweets) {
-                responseObserver.onNext(tweet);
-            }
-
-            responseObserver.onCompleted();
-        }
-
-        @Override
-        public void signUp(User user, StreamObserver<User> responseObserver) {
-            String query = "INSERT INTO Users (" +
-                    "first_name, last_name, username, password, email, " +
-                    "phone_number,country_id, birthday, date_created, date_last_modified) " +
-                    "VAlUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
-            Connection connection;
-
-            // Incomplete exception handling.
-            // Handle taken username, email, etc.
-         try {
-             connection =  DriverManager.getConnection("jdbc:postgresql://localhost:5432/"+"test","postgresql","1234");
-
-             PreparedStatement preparedStatement = connection.prepareStatement(query);
-             preparedStatement.setString(1, user.getFirstName());
-             preparedStatement.setString(2, user.getLastName());
-             preparedStatement.setString(3, user.getUsername());
-             preparedStatement.setString(4, user.getPassword());
-             preparedStatement.setString(5, user.getEmail());
-             preparedStatement.setString(6, user.getPhoneNumber());
-             preparedStatement.setInt(7, user.getCountryId());
-             // Possible error: check Timestamp.toString().
-             preparedStatement.setString(8, user.getBirthdate().toString());
-             preparedStatement.setString(9, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now()));
-             preparedStatement.setString(10, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now()));
-         } catch (Exception e) {
-             e.printStackTrace();
-             return;
-         }
-
-         // responseObserver.onNext();
-        }
     }
 }
