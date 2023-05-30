@@ -7,6 +7,7 @@ import io.grpc.stub.StreamObserver;
 import java.sql.*;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.logging.Logger;
@@ -20,7 +21,6 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
     // Possible error: does it have to be final?
     private final Connection connection;
     private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-
 
     public TwitterService(Connection connection) {
         this.connection = connection;
@@ -58,7 +58,9 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
     @Override
     public void signUp(User user, StreamObserver<User> responseObserver) {
-        LocalDateTime localDateTime  = LocalDateTime.now();
+        // LocalDateTime now = LocalDateTime.parse(dateTimeFormatter.format(LocalDateTime.now(ZoneOffset.UTC)));
+        LocalDateTime now = LocalDateTime.now();
+
         int id;
         String query = "INSERT INTO Users (" +
                 "first_name, " +
@@ -85,14 +87,13 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             statement.setString(5, user.getEmail());
             statement.setString(6, user.getPhoneNumber());
             statement.setInt(7, user.getCountryId());
-            // Possible error: check Timestamp.toString()
-            statement.setDate(8, new  java.sql.Date((new java.util.Date(user.getBirthdate()).getTime())));
-            Instant now = Instant.now();
-            statement.setTimestamp(9,Timestamp.valueOf(localDateTime));
-            statement.setTimestamp(10,Timestamp.valueOf(localDateTime));
+            statement.setDate(8, new java.sql.Date((new java.util.Date(user.getBirthdate()).getTime())));
+            statement.setTimestamp(9, Timestamp.valueOf(now));
+            statement.setTimestamp(10, Timestamp.valueOf(now));
             statement.executeUpdate();
-            String selectQuery = "SELECT id FROM users " +
-                                "where username = ? ";
+            String selectQuery = "SELECT id " +
+                    "FROM users " +
+                    "WHERE username = ? ";
             statement = connection.prepareStatement(selectQuery);
             statement.setString(1, user.getUsername());
             ResultSet resultSet =  statement.executeQuery();
