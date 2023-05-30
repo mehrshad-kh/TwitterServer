@@ -30,9 +30,9 @@ message User {
   // Not sure.
   int32 country_id = 8;
   google.protobuf.Timestamp birthdate = 9;
-  string bio = 10;
-  string location = 11;
-  string website = 12;
+  optional string bio = 10;
+  optional string location = 11;
+  optional string website = 12;
   google.protobuf.Timestamp date_created = 13;
   google.protobuf.Timestamp date_last_modified = 14;
 }

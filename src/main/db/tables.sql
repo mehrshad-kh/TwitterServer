@@ -5,15 +5,15 @@ CREATE TABLE IF NOT EXISTS Countries (
 
 CREATE TABLE IF NOT EXISTS Users (
     id SERIAL PRIMARY KEY,
-    first_name VARCHAR(50) ,
-    last_name VARCHAR(50) ,
-    username VARCHAR(50) ,
-    password VARCHAR(50) ,
-    email VARCHAR(50) ,
-    phone_number VARCHAR(50) ,
-    country_id INTEGER REFERENCES Countries (id) ,
-    birthdate  DATE , 
-    bio VARCHAR(280) ,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    username VARCHAR(50),
+    password VARCHAR(50),
+    email VARCHAR(50),
+    phone_number VARCHAR(50),
+    country_id INTEGER REFERENCES Countries (id),
+    birthdate  DATE,
+    bio VARCHAR(280),
     location VARCHAR(50),
     website VARCHAR(50),
     date_created TIMESTAMP,
@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS Users (
 );
 
 
-CREATE TABLE IF NOT EXISTS  ProfilePhotos (
+CREATE TABLE IF NOT EXISTS ProfilePhotos (
     id SERIAL PRIMARY KEY,    
     filename VARCHAR(100)
 );
