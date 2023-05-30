@@ -3,10 +3,7 @@ package com.mkh;
 import com.mkh.twitter.*;
 import io.grpc.stub.StreamObserver;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -59,6 +56,8 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
     @Override
     public void signUp(User user, StreamObserver<User> responseObserver) {
+        int id;
+
         String query = "INSERT INTO Users (" +
                 "first_name, " +
                 "last_name, " +
@@ -74,6 +73,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         // Incomplete exception handling.
         // Handle taken username, email, etc.
         // Close statement.
+
         try {
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, user.getFirstName());
@@ -88,12 +88,23 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             Instant now = Instant.now();
             statement.setString(9, dateTimeFormatter.format(now));
             statement.setString(10, dateTimeFormatter.format(now));
+            statement.executeUpdate();
+            String selectQuery = "SELECT id FROM users " +
+                                "where username = ? ";
+            statement = connection.prepareStatement(selectQuery);
+            statement.setString(1, user.getUsername());
+            ResultSet resultSet =  statement.executeQuery();
+            id = resultSet.getInt("id");
         } catch (SQLException e) {
             e.printStackTrace();
             return;
         }
 
-        responseObserver.onNext(User.newBuilder().build());
+        User registeredUser = user.toBuilder()
+                .setId(id)
+                .build();
+
+        responseObserver.onNext(registeredUser);
         responseObserver.onCompleted();
     }
 }
