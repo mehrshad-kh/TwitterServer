@@ -6,6 +6,8 @@ import io.grpc.stub.StreamObserver;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -19,6 +21,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
     // Possible error: does it have to be final?
     private final Connection connection;
+    private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     public TwitterService(Connection connection) {
         this.connection = connection;
@@ -57,33 +60,40 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
     @Override
     public void signUp(User user, StreamObserver<User> responseObserver) {
         String query = "INSERT INTO Users (" +
-                "first_name, last_name, username, password, email, " +
-                "phone_number,country_id, birthday, date_created, date_last_modified) " +
+                "first_name, " +
+                "last_name, " +
+                "username, " +
+                "password, " +
+                "email, " +
+                "phone_number, " +
+                "country_id, " +
+                "birthdate, " +
+                "date_created, " +
+                "date_last_modified) " +
                 "VAlUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
-        Connection connection;
-
         // Incomplete exception handling.
         // Handle taken username, email, etc.
+        // Close statement.
         try {
-            connection =  DriverManager.getConnection("jdbc:postgresql://localhost:5432/"+"test","postgresql","1234");
-
-            PreparedStatement preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setString(1, user.getFirstName());
-            preparedStatement.setString(2, user.getLastName());
-            preparedStatement.setString(3, user.getUsername());
-            preparedStatement.setString(4, user.getPassword());
-            preparedStatement.setString(5, user.getEmail());
-            preparedStatement.setString(6, user.getPhoneNumber());
-            preparedStatement.setInt(7, user.getCountryId());
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, user.getFirstName());
+            statement.setString(2, user.getLastName());
+            statement.setString(3, user.getUsername());
+            statement.setString(4, user.getPassword());
+            statement.setString(5, user.getEmail());
+            statement.setString(6, user.getPhoneNumber());
+            statement.setInt(7, user.getCountryId());
             // Possible error: check Timestamp.toString().
-            preparedStatement.setString(8, user.getBirthdate().toString());
-            preparedStatement.setString(9, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now()));
-            preparedStatement.setString(10, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now()));
-        } catch (Exception e) {
+            statement.setString(8, user.getBirthdate().toString());
+            Instant now = Instant.now();
+            statement.setString(9, dateTimeFormatter.format(now));
+            statement.setString(10, dateTimeFormatter.format(now));
+        } catch (SQLException e) {
             e.printStackTrace();
             return;
         }
 
-        // responseObserver.onNext();
+        responseObserver.onNext(User.newBuilder().build());
+        responseObserver.onCompleted();
     }
 }
