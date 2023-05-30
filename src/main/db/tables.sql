@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS Countries (
+CREATE TABLE IF NOT EXISTS countries (
     id SERIAL PRIMARY KEY,
     iso CHAR(2),
     name VARCHAR(100),
@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS Countries (
     phone_code INTEGER
 );
 
-CREATE TABLE IF NOT EXISTS Users (
+CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     first_name VARCHAR(50),
     last_name VARCHAR(50),
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS Users (
     password VARCHAR(50),
     email VARCHAR(50),
     phone_number VARCHAR(50),
-    country_id INTEGER REFERENCES Countries (id),
+    country_id INTEGER REFERENCES countries (id),
     birthdate  DATE,
     bio VARCHAR(280),
     location VARCHAR(50),
@@ -26,64 +26,64 @@ CREATE TABLE IF NOT EXISTS Users (
 );
 
 
-CREATE TABLE IF NOT EXISTS ProfilePhotos (
+CREATE TABLE IF NOT EXISTS profile_photos (
     id SERIAL PRIMARY KEY,    
     filename VARCHAR(100)
 );
 
-CREATE TABLE IF NOT EXISTS UserProfilePhotos (
+CREATE TABLE IF NOT EXISTS user_profile_photos (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES Users (id),
-    profile_photo_id INTEGER REFERENCES ProfilePhotos (id)
+    user_id INTEGER REFERENCES users (id),
+    profile_photo_id INTEGER REFERENCES profile_photos (id)
 );
 
-CREATE TABLE IF NOT EXISTS HeaderPhotos (
-    id SERIAL PRIMARY KEY,
-    filename VARCHAR(100)
-);
-
-CREATE TABLE IF NOT EXISTS UserHeaderPhotos (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES Users (id),
-    header_photo_id INTEGER REFERENCES HeaderPhotos (id)
-);
-
-CREATE TABLE IF NOT EXISTS Photos (
+CREATE TABLE IF NOT EXISTS header_photos (
     id SERIAL PRIMARY KEY,
     filename VARCHAR(100)
 );
 
-CREATE TABLE IF NOT EXISTS Tweets (
+CREATE TABLE IF NOT EXISTS user_header_photos (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users (id),
+    header_photo_id INTEGER REFERENCES header_photos (id)
+);
+
+CREATE TABLE IF NOT EXISTS photos (
+    id SERIAL PRIMARY KEY,
+    filename VARCHAR(100)
+);
+
+CREATE TABLE IF NOT EXISTS tweets (
     id SERIAL PRIMARY KEY,
     text VARCHAR(280),
-    photo_id INTEGER REFERENCES Photos (id),
-    tweet_id INTEGER REFERENCES Tweets (id),
+    photo_id INTEGER REFERENCES photos (id),
+    tweet_id INTEGER REFERENCES tweets (id),
     date_created TIMESTAMP
   
 );
 
-CREATE TABLE IF NOT EXISTS Followings (
+CREATE TABLE IF NOT EXISTS followings (
     id SERIAL PRIMARY KEY,
     follower_id INTEGER,
     followee_id INTEGER
 );
 
-CREATE TABLE IF NOT EXISTS Likes (
+CREATE TABLE IF NOT EXISTS likes (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES Users (id),
-    tweet_id INTEGER REFERENCES Tweets (id),
+    user_id INTEGER REFERENCES users (id),
+    tweet_id INTEGER REFERENCES tweets (id),
     date_created TIMESTAMP,
     date_deleted TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS Replies (
+CREATE TABLE IF NOT EXISTS replies (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES Users (id),
-    tweet_id INTEGER REFERENCES Tweets (id),
+    user_id INTEGER REFERENCES users (id),
+    tweet_id INTEGER REFERENCES tweets (id),
     date_created TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS DirectMessages (
+CREATE TABLE IF NOT EXISTS direct_messages (
     id SERIAL PRIMARY KEY,
     sender_id INTEGER,
     receiver_id INTEGER,
@@ -91,28 +91,26 @@ CREATE TABLE IF NOT EXISTS DirectMessages (
     date_created TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS Hashtags (
+CREATE TABLE IF NOT EXISTS hashtags (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50)
 );
 
-CREATE TABLE IF NOT EXISTS TweetHashtags (
+CREATE TABLE IF NOT EXISTS tweet_hashtags (
     id SERIAL PRIMARY KEY,
-    tweet_id INTEGER REFERENCES Tweets (id),
-    hashtag_id INTEGER REFERENCES Hashtags (id)
+    tweet_id INTEGER REFERENCES tweets (id),
+    hashtag_id INTEGER REFERENCES hashtags (id)
 );
 
-CREATE TABLE IF NOT EXISTS Blacklist (
+CREATE TABLE IF NOT EXISTS blacklist (
     id SERIAL PRIMARY KEY,
     blocker_id INTEGER,
     blocked_id INTEGER
 );
 
-CREATE TABLE IF NOT EXISTS Views (
+CREATE TABLE IF NOT EXISTS views (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES Users (id),
-    tweet_id INTEGER REFERENCES Tweets (id),
+    user_id INTEGER REFERENCES users (id),
+    tweet_id INTEGER REFERENCES tweets (id),
     date_time TIMESTAMP
 );
-
-
