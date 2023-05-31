@@ -200,4 +200,40 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         responseObserver.onNext(registeredUser);
         responseObserver.onCompleted();
     }
+    @Override
+    public void signIn(User user, StreamObserver<User> responseObserver) {
+        String query = "SELECT * " +
+                "FROM Users " +
+                "WHERE username = ? AND password = ? ";
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, user.getUsername());
+            statement.setString(2, user.getPassword());
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                User signedInUser = User.newBuilder()
+                        .setId(resultSet.getInt("id"))
+                        .setFirstName(resultSet.getString("first_name"))
+                        .setLastName(resultSet.getString("last_name"))
+                        .setUsername(resultSet.getString("username"))
+                        .setPassword(resultSet.getString("password"))
+                        .setEmail(resultSet.getString("email"))
+                        .setPhoneNumber(resultSet.getString("phone_number"))
+                        .setCountryId(resultSet.getInt("country_id"))
+                        .setBirthdate(resultSet.getDate("birthdate").toString())
+                        .setDateCreated(resultSet.getTimestamp("date_created").toString())
+                        .setDateLastModified(resultSet.getTimestamp("date_last_modified").toString())
+                        .build();
+                responseObserver.onNext(signedInUser);
+            } else {
+                responseObserver.onNext(null);
+            }
+            responseObserver.onCompleted();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+    }
+
 }

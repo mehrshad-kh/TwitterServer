@@ -14,6 +14,8 @@ service Twitter {
   rpc IsTakenUsername(MKString) returns (MKBoolean) {}
   rpc IsTakenEmail(MKString) returns (MKBoolean) {}
   rpc IsTakenPhoneNumber(MKString) returns (MKBoolean) {}
+  rpc SignIn(User) returns (User) {}
+
 }
 
 message AuthResponse {
