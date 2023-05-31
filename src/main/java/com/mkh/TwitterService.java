@@ -61,7 +61,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         boolean result = false;
         String query = "SELECT COUNT(*) " +
                 "FROM Users " +
-                "WHERE username = ?";
+                "WHERE username = ? ;";
         try {
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, username.getValue());
@@ -93,7 +93,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         boolean result = false;
         String query = "SELECT COUNT(*)" +
                 "FROM Users " +
-                "Where email = ? ";
+                "Where email = ? ;";
         try {
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, email.getValue());
@@ -122,7 +122,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         boolean result = false;
         String query = "SELECT COUNT(*) " +
                 "FROM Users "+
-                "WHERE phone_number = ? ";
+                "WHERE phone_number = ? ;";
         try {
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, phoneNumber.getValue());
@@ -183,7 +183,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             statement.execute();
             String selectQuery = "SELECT id " +
                     "FROM users " +
-                    "WHERE username = ? ";
+                    "WHERE username = ? ; ";
             statement = connection.prepareStatement(selectQuery);
             statement.setString(1, user.getUsername());
             ResultSet resultSet =  statement.executeQuery();
@@ -204,7 +204,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
     public void signIn(User user, StreamObserver<User> responseObserver) {
         String query = "SELECT * " +
                 "FROM Users " +
-                "WHERE username = ? AND password = ? ";
+                "WHERE username = ? AND password = ? ;";
         try {
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, user.getUsername());
@@ -235,5 +235,26 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             return;
         }
     }
+  @Override
+    public void  retrieveCountries(MKEmpty empty,StreamObserver<Country> responseObserver) {
+       String query = "SELECT id, name " +
+               "FROM Countries;";
+       try {
+           PreparedStatement statement = connection.prepareStatement(query);
+           ResultSet resultSet = statement.executeQuery();
+           while (resultSet.next()) {
+               Country country = Country.newBuilder()
+                       .setId(resultSet.getInt("id"))
+                       .setName(resultSet.getString("name"))
+                       .build();
+               responseObserver.onNext(country);
+           }
+           responseObserver.onCompleted();
+           statement.close();
+       } catch (SQLException e) {
+           e.printStackTrace();
+           return;
+       }
+   }
 
 }
