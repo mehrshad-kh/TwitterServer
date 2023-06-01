@@ -30,7 +30,7 @@ message MKBoolean {
 }
 
 message MKFile {
-  bytes file_bytes = 1;
+  bytes bytes = 1;
   string extension = 2;
 }
 

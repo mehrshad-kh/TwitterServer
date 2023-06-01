@@ -200,7 +200,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
     @Override
     public void submitProfilePhoto(ProfilePhoto profilePhoto, StreamObserver<MKBoolean> responseObserver) {
         boolean result;
-        byte[] bytes = profilePhoto.getPhoto().getFileBytes().toByteArray();
+        byte[] bytes = profilePhoto.getPhoto().getBytes().toByteArray();
 
         Path destinationPath
                 = Paths.get("profile-photos/" +
