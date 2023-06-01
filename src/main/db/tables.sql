@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS users (
     phone_number VARCHAR(50) UNIQUE,
     country_id INTEGER REFERENCES countries (id),
     birthdate  DATE,
-    bio VARCHAR(280),
+    bio VARCHAR(160),
     location VARCHAR(50),
     website VARCHAR(50),
     date_created TIMESTAMP,
