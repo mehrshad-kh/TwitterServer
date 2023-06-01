@@ -4,6 +4,12 @@ import com.google.type.DateTime;
 import com.mkh.twitter.*;
 import io.grpc.stub.StreamObserver;
 
+import org.apache.commons.lang3.RandomStringUtils;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.*;
 import java.text.DateFormat;
 import java.time.Instant;
@@ -11,6 +17,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -187,6 +194,29 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
                 .setId(id)
                 .build();
         responseObserver.onNext(registeredUser);
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void submitProfilePhoto(ProfilePhoto profilePhoto, StreamObserver<MKBoolean> responseObserver) {
+        boolean result;
+        byte[] bytes = profilePhoto.getPhoto().getFileBytes().toByteArray();
+
+        Path destinationPath
+                = Paths.get("profile-photos/" +
+                String.format("%s.%s",
+                RandomStringUtils.randomAlphabetic(16),
+                profilePhoto.getPhoto().getExtension()));
+
+        try {
+            Files.write(destinationPath, bytes);
+            result = true;
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "*** IO error occurred");
+            result = false;
+        }
+
+        responseObserver.onNext(MKBoolean.newBuilder().setValue(result).build());
         responseObserver.onCompleted();
     }
 }
