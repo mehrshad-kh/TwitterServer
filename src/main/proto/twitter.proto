@@ -15,6 +15,8 @@ service Twitter {
   rpc IsTakenEmail(MKString) returns (MKBoolean) {}
   rpc IsTakenPhoneNumber(MKString) returns (MKBoolean) {}
   rpc SubmitProfilePhoto(ProfilePhoto) returns (MKBoolean) {}
+  rpc SignIn(User) returns (User) {}
+  rpc RetrieveCountries(MKEmpty) returns (stream Country ) {}
 }
 
 message AuthResponse {
@@ -28,6 +30,7 @@ message MKString {
 message MKBoolean {
   bool value = 1;
 }
+message MKEmpty {}
 
 message MKFile {
   bytes bytes = 1;
@@ -69,5 +72,15 @@ enum AuthResult {
   INVALID_PASS = 0;
   NOT_FOUND = 1;
   GRANTED = 2;
+}
+
+message  Country {
+  int32 id = 1;
+  string iso = 2;
+  string name = 3;
+  string nice_name = 4;
+  string iso3 = 5;
+  int32 num_code = 6;
+  int32 phone_code = 7;
 }
 

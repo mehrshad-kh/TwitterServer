@@ -66,20 +66,25 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
     @Override
     public void isTakenUsername(MKString username, StreamObserver<MKBoolean> responseObserver) {
         boolean result = false;
-        String query = "SELECT id " +
+        String query = "SELECT COUNT(*) " +
                 "FROM Users " +
-                "WHERE username = ?;";
-
+                "WHERE username = ? ;";
         try {
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, username.getValue());
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
-                result = true;
-            } else {
-                result = false;
+                int count = resultSet.getInt(1);
+                System.out.println(count);
+                if (count == 0) {
+                    //if the username doesn't exist
+                    result = false;
+                }
+                else {
+                    //if the username exist
+                    result = true;
+                }
             }
-
             statement.close();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -93,20 +98,24 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
     @Override
     public void isTakenEmail(MKString email, StreamObserver<MKBoolean> responseObserver){
         boolean result = false;
-        String query = "SELECT id " +
+        String query = "SELECT COUNT(*)" +
                 "FROM Users " +
-                "Where email = ?;";
+                "Where email = ? ;";
         try {
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, email.getValue());
             ResultSet resultSet = statement.executeQuery();
-            if (resultSet.next()){
-                result = true;
-            } else {
-                result = false;
-            }
-
-            statement.close();
+               if (resultSet.next()){
+                    int count = resultSet.getInt(1);
+                    if (count == 0){
+                        //if the email  doesn't exist
+                        result = false;
+                    } else{
+                        //if the email  exist
+                        result = true;
+                    }
+                }
+               statement.close();
         } catch (SQLException e){
             e.printStackTrace();
             return;
@@ -117,21 +126,25 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
     }
     @Override
     public void isTakenPhoneNumber(MKString phoneNumber,StreamObserver<MKBoolean> responseObserver  ){
-        boolean result;
-        String query = "SELECT id " +
+        boolean result = false;
+        String query = "SELECT COUNT(*) " +
                 "FROM Users "+
-                "WHERE phone_number = ?;";
+                "WHERE phone_number = ? ;";
         try {
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, phoneNumber.getValue());
             ResultSet resultSet = statement.executeQuery();
-            if (resultSet.next()){
-                result = true;
-            } else{
-                result = false;
+           if (resultSet.next()){
+                int count = resultSet.getInt(1);
+                if (count == 0){
+                    //if the phone_number doesn't exist
+                    result = false;
+                } else{
+                    //if the phone_number exist
+                    result = true;
+                }
             }
-            statement.close();
-
+           statement.close();
         } catch (SQLException e){
             e.printStackTrace();
             return;
@@ -141,8 +154,6 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         responseObserver.onCompleted();
 
     }
-
-
     @Override
     public void signUp(User user, StreamObserver<User> responseObserver) {
         // LocalDateTime now = LocalDateTime.parse(dateTimeFormatter.format(LocalDateTime.now(ZoneOffset.UTC)));
@@ -179,7 +190,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             statement.execute();
             String selectQuery = "SELECT id " +
                     "FROM users " +
-                    "WHERE username = ? ";
+                    "WHERE username = ? ; ";
             statement = connection.prepareStatement(selectQuery);
             statement.setString(1, user.getUsername());
             ResultSet resultSet =  statement.executeQuery();
@@ -219,4 +230,61 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         responseObserver.onNext(MKBoolean.newBuilder().setValue(result).build());
         responseObserver.onCompleted();
     }
+
+    @Override
+    public void signIn(User user, StreamObserver<User> responseObserver) {
+        String query = "SELECT * " +
+                "FROM Users " +
+                "WHERE username = ? AND password = ? ;";
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, user.getUsername());
+            statement.setString(2, user.getPassword());
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                User signedInUser = User.newBuilder()
+                        .setId(resultSet.getInt("id"))
+                        .setFirstName(resultSet.getString("first_name"))
+                        .setLastName(resultSet.getString("last_name"))
+                        .setUsername(resultSet.getString("username"))
+                        .setPassword(resultSet.getString("password"))
+                        .setEmail(resultSet.getString("email"))
+                        .setPhoneNumber(resultSet.getString("phone_number"))
+                        .setCountryId(resultSet.getInt("country_id"))
+                        .setBirthdate(resultSet.getDate("birthdate").toString())
+                        .setDateCreated(resultSet.getTimestamp("date_created").toString())
+                        .setDateLastModified(resultSet.getTimestamp("date_last_modified").toString())
+                        .build();
+                responseObserver.onNext(signedInUser);
+            } else {
+                responseObserver.onNext(null);
+            }
+            responseObserver.onCompleted();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+    }
+  @Override
+    public void  retrieveCountries(MKEmpty empty,StreamObserver<Country> responseObserver) {
+       String query = "SELECT id, name " +
+               "FROM Countries;";
+       try {
+           PreparedStatement statement = connection.prepareStatement(query);
+           ResultSet resultSet = statement.executeQuery();
+           while (resultSet.next()) {
+               Country country = Country.newBuilder()
+                       .setId(resultSet.getInt("id"))
+                       .setName(resultSet.getString("name"))
+                       .build();
+               responseObserver.onNext(country);
+           }
+           responseObserver.onCompleted();
+           statement.close();
+       } catch (SQLException e) {
+           e.printStackTrace();
+           return;
+       }
+   }
 }
