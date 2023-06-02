@@ -1,4 +1,4 @@
-## Sample Twitter Server
+## Twitter Server
 
 This is a sample Twitter server written in pure Java via the gRPC framework.
 
