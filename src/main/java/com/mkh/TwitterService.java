@@ -214,21 +214,48 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
     public void submitProfilePhoto(ProfilePhoto profilePhoto, StreamObserver<MKBoolean> responseObserver) {
         boolean result;
         byte[] bytes = profilePhoto.getPhoto().getBytes().toByteArray();
-
+        String query = "INSERT INTO profile_photos (filename) " +
+                       "VALUES  (?);";
+        String query2 = "INSERT INTO user_profile_photos (user_id, profile_photo_id) " +
+                        "VALUES (?, ?);";
+        String query3 = "SELECT id " +
+                        "FROM profile_photos " +
+                        "WHERE filename = ?;";
+        String randomPath =  RandomStringUtils.randomAlphabetic(16);
         Path destinationPath
-                = Paths.get("profile-photos/" +
+                = Paths.get("D:\\" +
                 String.format("%s.%s",
-                RandomStringUtils.randomAlphabetic(16),
+                randomPath,
                 profilePhoto.getPhoto().getExtension()));
 
         try {
             Files.write(destinationPath, bytes);
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, randomPath + profilePhoto.getPhoto().getExtension());
+            statement.execute();
+            statement.close();
+            PreparedStatement statement3 = connection.prepareStatement(query3);
+            statement3.setString(1, randomPath + profilePhoto.getPhoto().getExtension());
+            ResultSet resultSet = statement3.executeQuery();
+            resultSet.next();
+            int profilePhotoId = resultSet.getInt("id");
+            statement3.close();
+            PreparedStatement statement2 = connection.prepareStatement(query2);
+            statement2.setInt(1, profilePhoto.getUserId());
+            statement2.setInt(2, profilePhotoId);
+            statement2.execute();
+            statement2.close();
             result = true;
         } catch (IOException e) {
             logger.log(Level.SEVERE, "*** IO error occurred");
+            e.printStackTrace();
             result = false;
         }
-
+        catch (SQLException e) {
+            logger.log(Level.SEVERE, "*** SQL error occurred");
+            e.printStackTrace();
+            result = false;
+        }
         responseObserver.onNext(MKBoolean.newBuilder().setValue(result).build());
         responseObserver.onCompleted();
     }
@@ -287,7 +314,6 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
                         .build();
                 responseObserver.onNext(country);
             }
-
             statement.close();
         } catch (SQLException e) {
             e.printStackTrace();
