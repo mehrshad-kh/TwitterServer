@@ -248,27 +248,24 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
-    //message Tweet {
-    //  int32 id = 1;
-    //  string text = 2;
-    //  int32 photo_id = 3;
-    //  int32 tweet_id = 4;
-    //  string date_created = 5;
-    //}
     @Override
     public void submitTweet(Tweet tweet, StreamObserver<Tweet> responseObserver){
         int id;
         String dateCreated;
         LocalDateTime now = LocalDateTime.now();
-        String query = "INSERT INTO tweets (text, photo_id, user_id, date_created) " +
-                       "VALUES (?, ?,?, ?);";
+        String query = "INSERT INTO tweets (text, photo_id, user_id, date_created ,tweet_id) " +
+                       "VALUES (?, ?, ?, ?, ?);";
 
         String query2 = "SELECT id , date_created " +
                         "FROM tweets " +
-                        "WHERE text = ?;";
+                        "WHERE text = ? AND  date_created = ? ;";
 
         try {
             PreparedStatement statement = connection.prepareStatement(query);
+            if (tweet.getText().equals(""))
+                statement.setNull(1, Types.VARCHAR);
+            else
+                statement.setString(1, tweet.getText());
             statement.setString(1, tweet.getText());
             if (tweet.getPhotoId() == 0)
                 statement.setNull(2, Types.INTEGER);
@@ -276,9 +273,15 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
                statement.setInt(2, tweet.getPhotoId());
             statement.setInt(3, tweet.getUserId());
             statement.setTimestamp(4, Timestamp.valueOf(now));
+            if (tweet.getTweetId() == 0)
+                statement.setNull(5, Types.INTEGER);
+            else
+                statement.setInt(5, tweet.getTweetId());
             statement.execute();
+            statement.close();
             statement = connection.prepareStatement(query2);
             statement.setString(1, tweet.getText());
+            statement.setTimestamp(2, Timestamp.valueOf(now));
             ResultSet resultSet = statement.executeQuery();
             resultSet.next();
             id = resultSet.getInt("id");
@@ -289,6 +292,58 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             return;
         }
         Tweet response = tweet.toBuilder().setId(id).setDateCreated(dateCreated).build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+    public void submitRetweet(Tweet tweet, StreamObserver<Tweet> responseObserver ){
+        int id;
+        String dateCreated;
+        String text;
+        LocalDateTime now = LocalDateTime.now();
+        String query = "INSERT INTO tweets (text, photo_id, user_id, date_created ,tweet_id) " +
+                "VALUES (?, ?, ?, ?, ?);";
+
+        String query2 = "SELECT  id, date_created  " +
+                "FROM tweets " +
+                "WHERE date_created = ? ;";
+        String qeury3 = "SELECT text " +
+                "FROM tweets " +
+                "WHERE id = ? ;";
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            if (tweet.getText().equals(""))
+                statement.setNull(1, Types.VARCHAR);
+            else
+                System.out.println("it is retweet and it doesn't have text");
+            if (tweet.getPhotoId() == 0)
+                statement.setNull(2, Types.INTEGER);
+            else
+                System.out.println("it is retweet and it doesn't have photo");
+            statement.setInt(3, tweet.getUserId());
+            statement.setTimestamp(4, Timestamp.valueOf(now));
+            System.out.println(tweet.getTweetId());
+            statement.setInt(5, tweet.getTweetId());
+            statement.execute();
+            statement.close();
+            statement = connection.prepareStatement(query2);
+            statement.setTimestamp(1, Timestamp.valueOf(now));
+            ResultSet resultSet = statement.executeQuery();
+            resultSet.next();
+            id = resultSet.getInt("id");
+            dateCreated = resultSet.getString("date_created");
+            statement.close();
+            statement = connection.prepareStatement(qeury3);
+            statement.setInt(1, tweet.getTweetId());
+            resultSet = statement.executeQuery();
+            resultSet.next();
+            text = resultSet.getString("text");
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+        //the respondent is the retweeted tweet and has the text of the original tweet ;
+        Tweet response = tweet.toBuilder().setId(id).setDateCreated(dateCreated).setText(text).build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
