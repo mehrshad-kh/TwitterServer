@@ -347,7 +347,50 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
-//    // it's address that we use to store the photo's address must be changed
+    public void submitQuote(Tweet tweet, StreamObserver<Tweet> responseObserver ) {
+        int id;
+        String dateCreated;
+        String text;
+        LocalDateTime now = LocalDateTime.now();
+        String query = "INSERT INTO tweets (text, photo_id, user_id, date_created ,tweet_id) " +
+                "VALUES (?, ?, ?, ?, ?);";
+
+        String query2 = "SELECT  id, date_created  " +
+                "FROM tweets " +
+                "WHERE date_created = ? ;";
+        ;
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            if (tweet.getText().equals(""))
+                statement.setNull(1, Types.VARCHAR);
+            else
+                statement.setString(1, tweet.getText());
+            if (tweet.getPhotoId() == 0)
+                statement.setNull(2, Types.INTEGER);
+            else
+                statement.setInt(2, tweet.getPhotoId());
+            statement.setInt(3, tweet.getUserId());
+            statement.setTimestamp(4, Timestamp.valueOf(now));
+            statement.setInt(5, tweet.getTweetId());
+            statement.execute();
+            statement.close();
+            statement = connection.prepareStatement(query2);
+            statement.setTimestamp(1, Timestamp.valueOf(now));
+            ResultSet resultSet = statement.executeQuery();
+            resultSet.next();
+            id = resultSet.getInt("id");
+            dateCreated = resultSet.getString("date_created");
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+        //the respondent is the retweeted tweet and has the text of its own
+        Tweet response = tweet.toBuilder().setId(id).setDateCreated(dateCreated).setText(tweet.getText()).build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+    // it's address that we use to store the photo's address must be changed
     @Override
     public void submitProfilePhoto(ProfilePhoto profilePhoto, StreamObserver<MKBoolean> responseObserver) {
         boolean result;
