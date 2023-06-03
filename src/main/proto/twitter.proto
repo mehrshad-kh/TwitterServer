@@ -15,8 +15,10 @@ service Twitter {
   rpc IsTakenEmail(MKString) returns (MKBoolean) {}
   rpc IsTakenPhoneNumber(MKString) returns (MKBoolean) {}
   rpc SubmitProfilePhoto(ProfilePhoto) returns (MKBoolean) {}
+  rpc RetrieveProfilePhoto(User) returns (ProfilePhoto) {}
   rpc SignIn(User) returns (User) {}
   rpc RetrieveCountries(MKEmpty) returns (stream Country ) {}
+
 }
 
 message AuthResponse {

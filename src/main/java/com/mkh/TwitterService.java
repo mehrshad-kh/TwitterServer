@@ -1,5 +1,6 @@
 package com.mkh;
 
+import com.google.protobuf.ByteString;
 import com.mkh.twitter.*;
 import io.grpc.stub.StreamObserver;
 
@@ -13,6 +14,7 @@ import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.concurrent.BlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -209,7 +211,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         responseObserver.onNext(signedUpUser);
         responseObserver.onCompleted();
     }
-
+    // it's address that we use to store the photo's address must be changed
     @Override
     public void submitProfilePhoto(ProfilePhoto profilePhoto, StreamObserver<MKBoolean> responseObserver) {
         boolean result;
@@ -231,11 +233,11 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         try {
             Files.write(destinationPath, bytes);
             PreparedStatement statement = connection.prepareStatement(query);
-            statement.setString(1, randomPath + profilePhoto.getPhoto().getExtension());
+            statement.setString(1, randomPath +"." + profilePhoto.getPhoto().getExtension());
             statement.execute();
             statement.close();
             PreparedStatement statement3 = connection.prepareStatement(query3);
-            statement3.setString(1, randomPath + profilePhoto.getPhoto().getExtension());
+            statement3.setString(1, randomPath + "." + profilePhoto.getPhoto().getExtension());
             ResultSet resultSet = statement3.executeQuery();
             resultSet.next();
             int profilePhotoId = resultSet.getInt("id");
@@ -294,6 +296,44 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         } catch (SQLException e) {
             e.printStackTrace();
             return;
+        }
+
+        responseObserver.onCompleted();
+    }
+    //it only retrieves the first photo of the user , do not forget to change it if it is needed
+    @Override
+    public void retrieveProfilePhoto(User user, StreamObserver<ProfilePhoto> responseObserver ){
+        String query = "SELECT profile_photos.filename " +
+                "FROM profile_photos " +
+                "INNER JOIN user_profile_photos " +
+                "ON profile_photos.id = user_profile_photos.profile_photo_id " +
+                "WHERE user_profile_photos.user_id = ?;";
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, user.getId());
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                System.out.println(resultSet.getString("filename"));
+                byte[] bytes = Files.readAllBytes(Paths.get("D:\\" + resultSet.getString("filename")));
+                MKFile file = MKFile.newBuilder()
+                        .setBytes(ByteString.copyFrom(bytes))
+                        .setExtension(resultSet.getString("filename").substring(resultSet.getString("filename").lastIndexOf(".")))
+                        .build();
+                ProfilePhoto profilePhoto = ProfilePhoto.newBuilder()
+                        .setUserId(user.getId())
+                        .setPhoto(file)
+                        .build();
+                responseObserver.onNext(profilePhoto);
+            } else {
+                responseObserver.onNext(null);
+            }
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
         responseObserver.onCompleted();
