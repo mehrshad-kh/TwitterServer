@@ -18,7 +18,8 @@ service Twitter {
   rpc RetrieveHeaderPhoto(User) returns (HeaderPhoto) {}
   rpc SubmitProfilePhoto(ProfilePhoto) returns (MKBoolean) {}
   rpc RetrieveProfilePhoto(User) returns (ProfilePhoto) {}
-  rpc submitTweetPhoto(MKFile) returns (TweetPhotoId) {}
+  rpc SubmitTweetPhoto(MKFile) returns (TweetPhotoId) {}
+  rpc SubmitTweet(Tweet) returns (Tweet) {}
   rpc SignIn(User) returns (User) {}
   rpc RetrieveCountries(MKEmpty) returns (stream Country ) {}
 
@@ -73,8 +74,11 @@ message Tweet {
   int32 id = 1;
   string text = 2;
   int32 photo_id = 3;
-  int32 tweet_id = 4;
-  string date_created = 5;
+  //why tweet id ?
+  //int32 tweet_id = 4;
+  //user id nedded?
+  int32 user_id = 5;
+  string date_created = 6;
 }
 
 enum AuthResult {

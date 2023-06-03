@@ -52,12 +52,14 @@ CREATE TABLE IF NOT EXISTS photos (
     id SERIAL PRIMARY KEY,
     filename VARCHAR(100)
 );
-
+--we forgot to  add the user_id column
 CREATE TABLE IF NOT EXISTS tweets (
     id SERIAL PRIMARY KEY,
     text VARCHAR(280),
     photo_id INTEGER REFERENCES photos (id),
-    tweet_id INTEGER REFERENCES tweets (id),
+   --we don't need the tweet_id column here
+   -- tweet_id INTEGER REFERENCES tweets (id),
+    user_id INTEGER REFERENCES users (id),
     date_created TIMESTAMP
   
 );

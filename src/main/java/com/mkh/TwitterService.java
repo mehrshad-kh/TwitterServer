@@ -248,7 +248,51 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
-    // it's address that we use to store the photo's address must be changed
+    //message Tweet {
+    //  int32 id = 1;
+    //  string text = 2;
+    //  int32 photo_id = 3;
+    //  int32 tweet_id = 4;
+    //  string date_created = 5;
+    //}
+    @Override
+    public void submitTweet(Tweet tweet, StreamObserver<Tweet> responseObserver){
+        int id;
+        String dateCreated;
+        LocalDateTime now = LocalDateTime.now();
+        String query = "INSERT INTO tweets (text, photo_id, user_id, date_created) " +
+                       "VALUES (?, ?,?, ?);";
+
+        String query2 = "SELECT id , date_created " +
+                        "FROM tweets " +
+                        "WHERE text = ?;";
+
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, tweet.getText());
+            if (tweet.getPhotoId() == 0)
+                statement.setNull(2, Types.INTEGER);
+            else
+               statement.setInt(2, tweet.getPhotoId());
+            statement.setInt(3, tweet.getUserId());
+            statement.setTimestamp(4, Timestamp.valueOf(now));
+            statement.execute();
+            statement = connection.prepareStatement(query2);
+            statement.setString(1, tweet.getText());
+            ResultSet resultSet = statement.executeQuery();
+            resultSet.next();
+            id = resultSet.getInt("id");
+            dateCreated = resultSet.getString("date_created");
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+        Tweet response = tweet.toBuilder().setId(id).setDateCreated(dateCreated).build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+//    // it's address that we use to store the photo's address must be changed
     @Override
     public void submitProfilePhoto(ProfilePhoto profilePhoto, StreamObserver<MKBoolean> responseObserver) {
         boolean result;
