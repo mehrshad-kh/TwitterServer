@@ -14,6 +14,8 @@ service Twitter {
   rpc IsTakenUsername(MKString) returns (MKBoolean) {}
   rpc IsTakenEmail(MKString) returns (MKBoolean) {}
   rpc IsTakenPhoneNumber(MKString) returns (MKBoolean) {}
+  rpc SubmitHeaderPhoto(HeaderPhoto) returns (MKBoolean) {}
+  rpc RetrieveHeaderPhoto(User) returns (HeaderPhoto) {}
   rpc SubmitProfilePhoto(ProfilePhoto) returns (MKBoolean) {}
   rpc RetrieveProfilePhoto(User) returns (ProfilePhoto) {}
   rpc SignIn(User) returns (User) {}
@@ -43,7 +45,10 @@ message ProfilePhoto {
   int32 user_id = 1;
   MKFile photo = 2;
 }
-
+message HeaderPhoto {
+  int32 user_id = 1;
+  MKFile photo = 2;
+}
 message User {
   int32 id = 1;
   string first_name = 2;

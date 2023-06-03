@@ -218,8 +218,10 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         byte[] bytes = profilePhoto.getPhoto().getBytes().toByteArray();
         String query = "INSERT INTO profile_photos (filename) " +
                        "VALUES  (?);";
+
         String query2 = "INSERT INTO user_profile_photos (user_id, profile_photo_id) " +
                         "VALUES (?, ?);";
+
         String query3 = "SELECT id " +
                         "FROM profile_photos " +
                         "WHERE filename = ?;";
@@ -261,6 +263,94 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         responseObserver.onNext(MKBoolean.newBuilder().setValue(result).build());
         responseObserver.onCompleted();
     }
+    @Override
+    public void submitHeaderPhoto(HeaderPhoto headerPhoto, StreamObserver<MKBoolean> responseObserver){
+        boolean result;
+        byte[] bytes = headerPhoto.getPhoto().getBytes().toByteArray();
+        String query = "INSERT INTO header_photos (filename) " +
+                "VALUES  (?);";
+
+        String query2 = "INSERT INTO user_header_photos (user_id, header_photo_id) " +
+                "VALUES (?, ?);";
+
+        String query3 = "SELECT id " +
+                "FROM header_photos " +
+                "WHERE filename = ?;";
+        String randomPath =  RandomStringUtils.randomAlphabetic(16);
+        Path destinationPath
+                = Paths.get("D:\\" +
+                String.format("%s.%s",
+                        randomPath,
+                        headerPhoto.getPhoto().getExtension()));
+
+        try {
+            Files.write(destinationPath, bytes);
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, randomPath +"." + headerPhoto.getPhoto().getExtension());
+            statement.execute();
+            statement.close();
+            PreparedStatement statement3 = connection.prepareStatement(query3);
+            statement3.setString(1, randomPath + "." + headerPhoto.getPhoto().getExtension());
+            ResultSet resultSet = statement3.executeQuery();
+            resultSet.next();
+            int headerPhotoId = resultSet.getInt("id");
+            statement3.close();
+            PreparedStatement statement2 = connection.prepareStatement(query2);
+            statement2.setInt(1, headerPhoto.getUserId());
+            statement2.setInt(2, headerPhotoId);
+            statement2.execute();
+            statement2.close();
+            result = true;
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "*** IO error occurred");
+            e.printStackTrace();
+            result = false;
+        }
+        catch (SQLException e) {
+            logger.log(Level.SEVERE, "*** SQL error occurred");
+            e.printStackTrace();
+            result = false;
+        }
+        responseObserver.onNext(MKBoolean.newBuilder().setValue(result).build());
+        responseObserver.onCompleted();
+    }
+    @Override
+    public void retrieveHeaderPhoto(User user, StreamObserver<HeaderPhoto>  responseObserver){
+        String query = "SELECT header_photos.filename " +
+                "FROM header_photos " +
+                "INNER JOIN user_header_photos " +
+                "ON header_photos.id = user_header_photos.header_photo_id " +
+                "WHERE user_header_photos.user_id = ?;";
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, user.getId());
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+               // System.out.println(resultSet.getString("filename"));
+                byte[] bytes = Files.readAllBytes(Paths.get("D:\\" + resultSet.getString("filename")));
+                MKFile file = MKFile.newBuilder()
+                        .setBytes(ByteString.copyFrom(bytes))
+                        .setExtension(resultSet.getString("filename").substring(resultSet.getString("filename").lastIndexOf(".")))
+                        .build();
+                HeaderPhoto headerPhoto = HeaderPhoto.newBuilder()
+                        .setUserId(user.getId())
+                        .setPhoto(file)
+                        .build();
+                responseObserver.onNext(headerPhoto);
+            } else {
+                responseObserver.onNext(null);
+            }
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        responseObserver.onCompleted();
+    }
+
 
     @Override
     public void signIn(User user, StreamObserver<User> responseObserver) {
@@ -363,3 +453,8 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         responseObserver.onCompleted();
     }
 }
+// to check :
+// 1- address that we use to store the photo's address must be changed
+// 2- it only retrieves the first photo of the user , do not forget to change it if it is needed
+//we get a User as input and use it's id to retrieve the photo but how to handel if the user doesn't have a photo
+// or it doesn't exist in the database
