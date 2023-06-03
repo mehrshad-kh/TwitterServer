@@ -18,6 +18,7 @@ service Twitter {
   rpc RetrieveHeaderPhoto(User) returns (HeaderPhoto) {}
   rpc SubmitProfilePhoto(ProfilePhoto) returns (MKBoolean) {}
   rpc RetrieveProfilePhoto(User) returns (ProfilePhoto) {}
+  rpc submitTweetPhoto(MKFile) returns (TweetPhotoId) {}
   rpc SignIn(User) returns (User) {}
   rpc RetrieveCountries(MKEmpty) returns (stream Country ) {}
 
@@ -26,16 +27,13 @@ service Twitter {
 message AuthResponse {
   AuthResult result = 1;
 }
-
 message MKString {
   string value = 1; 
 }
-
 message MKBoolean {
   bool value = 1;
 }
 message MKEmpty {}
-
 message MKFile {
   bytes bytes = 1;
   string extension = 2;
@@ -48,6 +46,10 @@ message ProfilePhoto {
 message HeaderPhoto {
   int32 user_id = 1;
   MKFile photo = 2;
+}
+message TweetPhotoId{
+  int32 photo_id = 1;
+  MKBoolean result = 2;
 }
 message User {
   int32 id = 1;

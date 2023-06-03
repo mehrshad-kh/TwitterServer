@@ -211,6 +211,43 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         responseObserver.onNext(signedUpUser);
         responseObserver.onCompleted();
     }
+    @Override
+    public void submitTweetPhoto(MKFile file, StreamObserver<TweetPhotoId> responseObserver){
+        int id;
+        String query = "INSERT INTO photos (filename) " +
+                "VALUES (?);";
+
+        String query2 = "SELECT id " +
+                "FROM photos " +
+                "WHERE filename = ?;";
+
+        String randomPath = RandomStringUtils.randomAlphabetic(16);
+        Path destinationPath
+                = Paths.get("D:\\" +
+                String.format("%s.%s",
+                        randomPath,
+                        file.getExtension()));
+
+        try {
+            Files.write(destinationPath, file.getBytes().toByteArray());
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, destinationPath.toString());
+            statement.execute();
+            statement = connection.prepareStatement(query2);
+            statement.setString(1, destinationPath.toString());
+            ResultSet resultSet = statement.executeQuery();
+            resultSet.next();
+            id = resultSet.getInt("id");
+            statement.close();
+        } catch (SQLException | IOException e) {
+            e.printStackTrace();
+            return;
+        }
+        MKBoolean mkBoolean = MKBoolean.newBuilder().setValue(true).build();
+        TweetPhotoId response = TweetPhotoId.newBuilder().setPhotoId(id).setResult(mkBoolean).build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
     // it's address that we use to store the photo's address must be changed
     @Override
     public void submitProfilePhoto(ProfilePhoto profilePhoto, StreamObserver<MKBoolean> responseObserver) {
@@ -314,43 +351,6 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         responseObserver.onNext(MKBoolean.newBuilder().setValue(result).build());
         responseObserver.onCompleted();
     }
-    @Override
-    public void retrieveHeaderPhoto(User user, StreamObserver<HeaderPhoto>  responseObserver){
-        String query = "SELECT header_photos.filename " +
-                "FROM header_photos " +
-                "INNER JOIN user_header_photos " +
-                "ON header_photos.id = user_header_photos.header_photo_id " +
-                "WHERE user_header_photos.user_id = ?;";
-        try {
-            PreparedStatement statement = connection.prepareStatement(query);
-            statement.setInt(1, user.getId());
-            ResultSet resultSet = statement.executeQuery();
-
-            if (resultSet.next()) {
-               // System.out.println(resultSet.getString("filename"));
-                byte[] bytes = Files.readAllBytes(Paths.get("D:\\" + resultSet.getString("filename")));
-                MKFile file = MKFile.newBuilder()
-                        .setBytes(ByteString.copyFrom(bytes))
-                        .setExtension(resultSet.getString("filename").substring(resultSet.getString("filename").lastIndexOf(".")))
-                        .build();
-                HeaderPhoto headerPhoto = HeaderPhoto.newBuilder()
-                        .setUserId(user.getId())
-                        .setPhoto(file)
-                        .build();
-                responseObserver.onNext(headerPhoto);
-            } else {
-                responseObserver.onNext(null);
-            }
-            statement.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        responseObserver.onCompleted();
-    }
-
 
     @Override
     public void signIn(User user, StreamObserver<User> responseObserver) {
@@ -428,7 +428,42 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
         responseObserver.onCompleted();
     }
+    @Override
+    public void retrieveHeaderPhoto(User user, StreamObserver<HeaderPhoto>  responseObserver){
+        String query = "SELECT header_photos.filename " +
+                "FROM header_photos " +
+                "INNER JOIN user_header_photos " +
+                "ON header_photos.id = user_header_photos.header_photo_id " +
+                "WHERE user_header_photos.user_id = ?;";
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, user.getId());
+            ResultSet resultSet = statement.executeQuery();
 
+            if (resultSet.next()) {
+                // System.out.println(resultSet.getString("filename"));
+                byte[] bytes = Files.readAllBytes(Paths.get("D:\\" + resultSet.getString("filename")));
+                MKFile file = MKFile.newBuilder()
+                        .setBytes(ByteString.copyFrom(bytes))
+                        .setExtension(resultSet.getString("filename").substring(resultSet.getString("filename").lastIndexOf(".")))
+                        .build();
+                HeaderPhoto headerPhoto = HeaderPhoto.newBuilder()
+                        .setUserId(user.getId())
+                        .setPhoto(file)
+                        .build();
+                responseObserver.onNext(headerPhoto);
+            } else {
+                responseObserver.onNext(null);
+            }
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        responseObserver.onCompleted();
+    }
     @Override
     public void retrieveCountries(MKEmpty empty, StreamObserver<Country> responseObserver) {
         String query = "SELECT id, name " +
