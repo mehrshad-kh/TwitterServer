@@ -212,7 +212,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         responseObserver.onCompleted();
     }
     @Override
-    public void submitTweetPhoto(MKFile file, StreamObserver<TweetPhotoId> responseObserver){
+    public void uploadPhoto(MKFile file, StreamObserver<TweetPhotoId> responseObserver){
         int id;
         String query = "INSERT INTO photos (filename) " +
                 "VALUES (?);";
@@ -626,7 +626,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         responseObserver.onCompleted();
     }
     @Override
-    public void updateProfile(User user, StreamObserver<User> responseObserver){
+    public void updateProfileInfo(User user, StreamObserver<User> responseObserver){
         String query = "UPDATE users "+
                 "Set  first_name = ?, " +
                 "last_name = ?, " +
@@ -876,6 +876,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         }
         responseObserver.onCompleted();
     }
+
 }
 // to check :
 // 1- address that we use to store the photo's address must be changed : check

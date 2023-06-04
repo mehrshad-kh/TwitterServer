@@ -18,12 +18,12 @@ service Twitter {
   rpc RetrieveHeaderPhoto(User) returns (HeaderPhoto) {}
   rpc SubmitProfilePhoto(ProfilePhoto) returns (MKBoolean) {}
   rpc RetrieveProfilePhoto(User) returns (ProfilePhoto) {}
-  rpc SubmitTweetPhoto(MKFile) returns (TweetPhotoId) {}
+  rpc UploadPhoto(MKFile) returns (TweetPhotoId) {}
   rpc SendTweet(Tweet) returns (MKBoolean) {}
   rpc SendRetweet(Tweet) returns (MKBoolean) {}
   rpc SendQuote(Tweet) returns (MKBoolean) {}
   rpc SignIn(User) returns (User) {}
-  rpc UpdateProfile(User) returns (User) {}
+  rpc UpdateProfileInfo(User) returns (User) {}
   rpc LikeTweet(TweetLike) returns (MKBoolean) {}
   rpc UnlikeTweet(TweetLike) returns (MKBoolean) {}
   rpc Follow(FollowRequest) returns (MKBoolean) {}
