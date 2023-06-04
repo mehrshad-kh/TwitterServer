@@ -19,9 +19,9 @@ service Twitter {
   rpc SubmitProfilePhoto(ProfilePhoto) returns (MKBoolean) {}
   rpc RetrieveProfilePhoto(User) returns (ProfilePhoto) {}
   rpc SubmitTweetPhoto(MKFile) returns (TweetPhotoId) {}
-  rpc SendTweet(Tweet) returns (Tweet) {}
-  rpc SendRetweet(Tweet) returns (Tweet) {}
-  rpc SendQuote(Tweet) returns (Tweet) {}
+  rpc SendTweet(Tweet) returns (MKBoolean) {}
+  rpc SendRetweet(Tweet) returns (MKBoolean) {}
+  rpc SendQuote(Tweet) returns (MKBoolean) {}
   rpc SignIn(User) returns (User) {}
   rpc UpdateProfile(User) returns (User) {}
   rpc RetrieveCountries(MKEmpty) returns (stream Country ) {}

@@ -249,7 +249,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         responseObserver.onCompleted();
     }
     @Override
-    public void sendTweet(Tweet tweet, StreamObserver<Tweet> responseObserver){
+    public void sendTweet(Tweet tweet, StreamObserver<MKBoolean> responseObserver){
         int id;
         String dateCreated;
         LocalDateTime now = LocalDateTime.now();
@@ -291,11 +291,10 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             e.printStackTrace();
             return;
         }
-        Tweet response = tweet.toBuilder().setId(id).setDateCreated(dateCreated).build();
-        responseObserver.onNext(response);
+        responseObserver.onNext(MKBoolean.newBuilder().setValue(true).build());
         responseObserver.onCompleted();
     }
-    public void sendRetweet(Tweet tweet, StreamObserver<Tweet> responseObserver ){
+    public void sendRetweet(Tweet tweet, StreamObserver<MKBoolean> responseObserver ){
         int id;
         String dateCreated;
         String text;
@@ -342,12 +341,10 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             e.printStackTrace();
             return;
         }
-        //the respondent is the retweeted tweet and has the text of the original tweet ;
-        Tweet response = tweet.toBuilder().setId(id).setDateCreated(dateCreated).setText(text).build();
-        responseObserver.onNext(response);
+        responseObserver.onNext(MKBoolean.newBuilder().setValue(true).build());
         responseObserver.onCompleted();
     }
-    public void sendQuote(Tweet tweet, StreamObserver<Tweet> responseObserver ) {
+    public void sendQuote(Tweet tweet, StreamObserver<MKBoolean> responseObserver ) {
         int id;
         String dateCreated;
         String text;
@@ -387,7 +384,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         }
         //the respondent is the retweeted tweet and has the text of its own
         Tweet response = tweet.toBuilder().setId(id).setDateCreated(dateCreated).setText(tweet.getText()).build();
-        responseObserver.onNext(response);
+        responseObserver.onNext(MKBoolean.newBuilder().setValue(true).build());
         responseObserver.onCompleted();
     }
     // it's address that we use to store the photo's address must be changed
@@ -632,8 +629,18 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
     @Override
     public void updateProfile(User user, StreamObserver<User> responseObserver){
         String query = "UPDATE users "+
-                        "Set  first_name = ?, last_name = ?, password = ?, email = ?, phone_number = ?, country_id = ?, birthdate = ?, date_last_modified = ?, bio = ?, location = ?, website = ? "+
-                        "WHERE id = ? ;";
+                "Set  first_name = ?, " +
+                "last_name = ?, " +
+                "password = ?, " +
+                "email = ?, " +
+                "phone_number = ?, " +
+                "country_id = ?, " +
+                "birthdate = ?, " +
+                "date_last_modified = ?, " +
+                "bio = ?, " +
+                "location = ?, " +
+                "website = ? "+
+                "WHERE id = ? ;";
         LocalDateTime now = LocalDateTime.now();
         try {
             PreparedStatement statement = connection.prepareStatement(query);
@@ -641,13 +648,25 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             statement.setString(2, user.getLastName());
             statement.setString(3, user.getPassword());
             statement.setString(4, user.getEmail());
-            statement.setString(5, user.getPhoneNumber());
+            if (user.getPhoneNumber().isEmpty())
+                statement.setNull(5, Types.VARCHAR);
+            else
+                statement.setString(5, user.getPhoneNumber());
             statement.setInt(6, user.getCountryId());
             statement.setDate(7, java.sql.Date.valueOf(user.getBirthdate()));
             statement.setTimestamp(8, Timestamp.valueOf(now));
-            statement.setString(9, user.getBio());
-            statement.setString(10, user.getLocation());
-            statement.setString(11, user.getWebsite());
+            if (user.getBio().isEmpty())
+                statement.setNull(9, Types.VARCHAR);
+            else
+                statement.setString(9, user.getBio());
+            if (user.getLocation().isEmpty())
+                statement.setNull(10, Types.VARCHAR);
+            else
+                statement.setString(10, user.getLocation());
+            if (user.getWebsite().isEmpty())
+                statement.setNull(11, Types.VARCHAR);
+            else
+                statement.setString(11, user.getWebsite());
             statement.setInt(12, user.getId());
             statement.executeUpdate();
             statement.close();
