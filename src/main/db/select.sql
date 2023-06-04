@@ -3,7 +3,7 @@ FROM tweets
 WHERE user_id IN (
     SELECT followee_id 
     FROM followings
-    WHERE follower_id = 19 AND date_deleted NOT NULL
+    WHERE follower_id = 19 AND date_deleted IS NOT NULL
 ) AND tweet_id NOT IN (
     SELECT tweet_id
     FROM tweet_views
@@ -62,7 +62,7 @@ WHERE id IN (
 OR (user_id IN (
         SELECT followee_id 
         FROM followings
-        WHERE follower_id = 19 AND date_deleted NOT NULL
+        WHERE follower_id = 19 AND date_deleted IS NOT NULL
     ) AND tweet_id NOT IN (
         SELECT tweet_id
         FROM tweet_views
@@ -77,7 +77,7 @@ FROM tweets
 WHERE user_id IN (
     SELECT followee_id 
     FROM followings
-    WHERE follower_id = 19 AND date_deleted NOT NULL
+    WHERE follower_id = 19 AND date_deleted IS NOT NULL
 ) 
 -- ...and that I haven't seen.
 AND tweet_id NOT IN (

@@ -17,6 +17,7 @@ service Twitter {
   rpc SubmitProfilePhoto(ProfilePhoto) returns (MKBoolean) {}
   rpc SignIn(User) returns (User) {}
   rpc RetrieveCountries(MKEmpty) returns (stream Country ) {}
+  rpc RetrieveLikeCount(Tweet) returns (MKInteger) {}
 }
 
 message AuthResponse {
@@ -30,6 +31,11 @@ message MKString {
 message MKBoolean {
   bool value = 1;
 }
+
+message MKInteger {
+  int32 value = 1;
+}
+
 message MKEmpty {}
 
 message MKFile {

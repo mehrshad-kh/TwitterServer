@@ -296,4 +296,34 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
         responseObserver.onCompleted();
     }
+
+    @Override
+    public void retrieveLikeCount(Tweet tweet, StreamObserver<MKInteger> responseObserver) {
+        int count;
+        String query = "SELECT COUNT(user_id) " +
+                "FROM likes " +
+                "WHERE tweet_id = ? " +
+                "AND date_deleted IS NOT NULL;";
+
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                count = resultSet.getInt(1);
+            } else {
+                count = 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        MKInteger response = MKInteger.newBuilder()
+                .setValue(count)
+                .build();
+
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
 }
