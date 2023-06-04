@@ -58,15 +58,12 @@ CREATE TABLE IF NOT EXISTS user_header_photos (
     header_photo_id INTEGER REFERENCES header_photos (id)
 );
 
---we forgot to  add the user_id column
 CREATE TABLE IF NOT EXISTS tweets (
     id SERIAL PRIMARY KEY,
     text VARCHAR(280),
-  --  photo_id INTEGER REFERENCES photos (id),
     retweet_id INTEGER REFERENCES tweets (id),
     sender_id INTEGER REFERENCES users (id),
     date_created TIMESTAMP
-  
 );
 
 CREATE TABLE IF NOT EXISTS followings (
