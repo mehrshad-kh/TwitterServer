@@ -24,6 +24,11 @@ CREATE TABLE IF NOT EXISTS users (
     date_created TIMESTAMP,
     date_last_modified TIMESTAMP
 );
+CREATE TABLE IF NOT EXISTS tweet_photos (
+    id SERIAL PRIMARY KEY,
+    tweet_id INTEGER REFERENCES tweets (id),
+    photo_id INTEGER REFERENCES photos (id)
+);
 
 
 CREATE TABLE IF NOT EXISTS profile_photos (
@@ -56,7 +61,7 @@ CREATE TABLE IF NOT EXISTS photos (
 CREATE TABLE IF NOT EXISTS tweets (
     id SERIAL PRIMARY KEY,
     text VARCHAR(280),
-    photo_id INTEGER REFERENCES photos (id),
+  --  photo_id INTEGER REFERENCES photos (id),
     tweet_id INTEGER REFERENCES tweets (id),
     user_id INTEGER REFERENCES users (id),
     date_created TIMESTAMP
