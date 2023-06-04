@@ -854,6 +854,28 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         }
         responseObserver.onCompleted();
     }
+    public void searchUser(MKString mkString , StreamObserver<User> responseObserver){
+        String query = "SELECT * FROM users WHERE username LIKE ? OR first_name LIKE ? OR last_name LIKE ?;";
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, "%" + mkString.getValue() + "%");
+            statement.setString(2, "%" + mkString.getValue() + "%");
+            statement.setString(3, "%" + mkString.getValue() + "%");
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                responseObserver.onNext(User.newBuilder()
+                        .setId(resultSet.getInt("id"))
+                        .setUsername(resultSet.getString("username"))
+                        .build());
+            }
+            resultSet.close();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+        responseObserver.onCompleted();
+    }
 }
 // to check :
 // 1- address that we use to store the photo's address must be changed : check
