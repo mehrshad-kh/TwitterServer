@@ -361,4 +361,36 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
+
+    @Override
+    public void retrieveRetweetCount(Tweet tweet, StreamObserver<MKInteger> responseObserver) {
+        int count;
+        String query = "SELECT COUNT(id) " +
+                "FROM tweets " +
+                "WHERE retweet_id = ?;";
+
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, tweet.getId());
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                count = resultSet.getInt(1);
+            } else {
+                count = 0;
+            }
+
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        MKInteger response = MKInteger.newBuilder()
+                .setValue(count)
+                .build();
+
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
 }
