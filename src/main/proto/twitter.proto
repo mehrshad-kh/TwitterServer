@@ -30,6 +30,8 @@ service Twitter {
   rpc UnFollow(FollowRequest) returns (MKBoolean) {}
   rpc Block(BLockRequest) returns (MKBoolean) {}
   rpc UnBlock(BLockRequest) returns (MKBoolean) {}
+  rpc RetrieveFollowers(User) returns (stream User) {}
+  rpc RetrieveFollowees(User) returns (stream User) {}
   rpc RetrieveCountries(MKEmpty) returns (stream Country ) {}
 
 }

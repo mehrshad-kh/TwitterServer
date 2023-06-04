@@ -801,7 +801,59 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         responseObserver.onNext(MKBoolean.newBuilder().setValue(true).build());
         responseObserver.onCompleted();
     }
+    @Override
+    public void retrieveFollowers(User user , StreamObserver<User> responseObserver){
+        String query = "SELECT * FROM users WHERE id IN (SELECT follower_id FROM followings WHERE followee_id = ? AND date_deleted is null);";
 
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, user.getId());
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                responseObserver.onNext(User.newBuilder()
+                        .setId(resultSet.getInt("id"))
+                        .setUsername(resultSet.getString("username"))
+                        .setEmail(resultSet.getString("email"))
+                        .setFirstName(resultSet.getString("first_name"))
+                        .setLastName(resultSet.getString("last_name"))
+                        .setBirthdate(resultSet.getString("birthdate"))
+                        .build());
+            }
+            resultSet.close();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+        responseObserver.onCompleted();
+    }
+    @Override
+    public void retrieveFollowees(User user , StreamObserver<User> responseObserver){
+        String query = "SELECT * FROM users WHERE id IN (SELECT followee_id FROM followings WHERE follower_id = ? AND date_deleted is null);";
+
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, user.getId());
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                System.out.println(resultSet.getString("username"));
+                responseObserver.onNext(User.newBuilder()
+                        .setId(resultSet.getInt("id"))
+                        .setUsername(resultSet.getString("username"))
+                        .setEmail(resultSet.getString("email"))
+                        .setFirstName(resultSet.getString("first_name"))
+                        .setLastName(resultSet.getString("last_name"))
+                        .setBirthdate(resultSet.getString("birthdate"))
+                        .build());
+            }
+            resultSet.close();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+        responseObserver.onCompleted();
+    }
 }
 // to check :
 // 1- address that we use to store the photo's address must be changed : check
