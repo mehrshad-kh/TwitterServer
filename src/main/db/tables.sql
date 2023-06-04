@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS users (
     date_created TIMESTAMP,
     date_last_modified TIMESTAMP
 );
+
 CREATE TABLE IF NOT EXISTS photos (
     id SERIAL PRIMARY KEY,
     filename VARCHAR(100)

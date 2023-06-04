@@ -8,7 +8,6 @@ option java_outer_classname = "TwitterProto";
 package twitter;
 
 service Twitter {
-  rpc Authenticate(User) returns (AuthResponse) {}
   rpc GetDailyBriefing(User) returns (stream Tweet) {}
   rpc SignUp(User) returns (User) {}
   rpc IsTakenUsername(MKString) returns (MKBoolean) {}
@@ -20,21 +19,21 @@ service Twitter {
   rpc RetrieveProfilePhoto(User) returns (ProfilePhoto) {}
   rpc UploadTweetPhoto(TweetPhoto) returns (MKBoolean) {}
   rpc RetrieveTweetPhotos(Tweet) returns (stream MKFile) {}
-  rpc SendTweet(Tweet) returns (Tweet) {}
+  rpc SendTweet(Tweet) returns (MKBoolean) {}
   rpc SendRetweet(Tweet) returns (MKBoolean) {}
-  rpc SendQuote(Tweet) returns (Tweet) {}
+  rpc SendQuote(Tweet) returns (MKBoolean) {}
   rpc SignIn(User) returns (User) {}
+  rpc SearchUsers(MKString) returns (stream User) {}
   rpc UpdateProfileInfo(User) returns (User) {}
   rpc LikeTweet(TweetLike) returns (MKBoolean) {}
   rpc UnlikeTweet(TweetLike) returns (MKBoolean) {}
   rpc Follow(FollowRequest) returns (MKBoolean) {}
-  rpc UnFollow(FollowRequest) returns (MKBoolean) {}
-  rpc Block(BLockRequest) returns (MKBoolean) {}
-  rpc UnBlock(BLockRequest) returns (MKBoolean) {}
+  rpc Unfollow(FollowRequest) returns (MKBoolean) {}
+  rpc Block(BlockRequest) returns (MKBoolean) {}
+  rpc Unblock(BlockRequest) returns (MKBoolean) {}
   rpc RetrieveFollowers(User) returns (stream User) {}
   rpc RetrieveFollowees(User) returns (stream User) {}
   rpc RetrieveTweets(User) returns (stream Tweet) {}
-  rpc searchUser(MKString) returns (stream User) {}
   rpc RetrieveCountries(MKEmpty) returns (stream Country ) {}
   rpc RetrieveLikeCount(Tweet) returns (MKInteger) {}
   rpc RetrieveReplyCount(Tweet) returns (MKInteger) {}
@@ -142,7 +141,7 @@ message FollowRequest {
   string date_created = 5;
   string date_deleted= 6;
 }
-message BLockRequest {
+message BlockRequest {
   int32 id = 1;
   int32 blocker_id = 3;
   int32 blocked_id = 4;
