@@ -715,9 +715,49 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         responseObserver.onNext(MKBoolean.newBuilder().setValue(true).build());
         responseObserver.onCompleted();
     }
+    @Override
+    public void follow(FollowRequest followRequest, StreamObserver<MKBoolean> responseObserver){
+        LocalDateTime now = LocalDateTime.now();
+        String query = "INSERT INTO followings (follower_id, followee_id ,date_created) " +
+                "VALUES (?, ?, ?);";
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, followRequest.getFollowerId());
+            statement.setInt(2, followRequest.getFolloweeId());
+            statement.setTimestamp(3, Timestamp.valueOf(now));
+            statement.executeUpdate();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+        responseObserver.onNext(MKBoolean.newBuilder().setValue(true).build());
+        responseObserver.onCompleted();
+    }
+    @Override
+    public void unFollow(FollowRequest followRequest, StreamObserver<MKBoolean> responseObserver){
+        String query = "update  followings " +
+                "set date_deleted = ? " +
+                "WHERE follower_id = ? AND followee_id = ?;";
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setInt(2, followRequest.getFollowerId());
+            statement.setInt(3, followRequest.getFolloweeId());
+            statement.executeUpdate();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+        responseObserver.onNext(MKBoolean.newBuilder().setValue(true).build());
+        responseObserver.onCompleted();
+    }
+
 }
 // to check :
 // 1- address that we use to store the photo's address must be changed : check
 // 2- it only retrieves the first photo of the user , do not forget to change it if it is needed
-//we get a User as input and use it's id to retrieve the photo but how to handel if the user doesn't have a photo
+//we get a User as input and use its id to retrieve the photo but how to handel if the user doesn't have a photo
 // or it doesn't exist in the database
+
