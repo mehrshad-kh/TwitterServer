@@ -629,9 +629,39 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
         responseObserver.onCompleted();
     }
+    @Override
+    public void updateProfile(User user, StreamObserver<User> responseObserver){
+        String query = "UPDATE users "+
+                        "Set  first_name = ?, last_name = ?, password = ?, email = ?, phone_number = ?, country_id = ?, birthdate = ?, date_last_modified = ?, bio = ?, location = ?, website = ? "+
+                        "WHERE id = ? ;";
+        LocalDateTime now = LocalDateTime.now();
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, user.getFirstName());
+            statement.setString(2, user.getLastName());
+            statement.setString(3, user.getPassword());
+            statement.setString(4, user.getEmail());
+            statement.setString(5, user.getPhoneNumber());
+            statement.setInt(6, user.getCountryId());
+            statement.setDate(7, java.sql.Date.valueOf(user.getBirthdate()));
+            statement.setTimestamp(8, Timestamp.valueOf(now));
+            statement.setString(9, user.getBio());
+            statement.setString(10, user.getLocation());
+            statement.setString(11, user.getWebsite());
+            statement.setInt(12, user.getId());
+            statement.executeUpdate();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+        responseObserver.onNext(user);
+        responseObserver.onCompleted();
+
+    }
 }
 // to check :
-// 1- address that we use to store the photo's address must be changed
+// 1- address that we use to store the photo's address must be changed : check
 // 2- it only retrieves the first photo of the user , do not forget to change it if it is needed
 //we get a User as input and use it's id to retrieve the photo but how to handel if the user doesn't have a photo
 // or it doesn't exist in the database

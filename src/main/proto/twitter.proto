@@ -23,6 +23,7 @@ service Twitter {
   rpc SendRetweet(Tweet) returns (Tweet) {}
   rpc SendQuote(Tweet) returns (Tweet) {}
   rpc SignIn(User) returns (User) {}
+  rpc UpdateProfile(User) returns (User) {}
   rpc RetrieveCountries(MKEmpty) returns (stream Country ) {}
 
 }
