@@ -18,6 +18,7 @@ service Twitter {
   rpc SignIn(User) returns (User) {}
   rpc RetrieveCountries(MKEmpty) returns (stream Country ) {}
   rpc RetrieveLikeCount(Tweet) returns (MKInteger) {}
+  rpc RetrieveReplyCount()
 }
 
 message AuthResponse {
@@ -74,13 +75,20 @@ message Tweet {
   string date_created = 5;
 }
 
+message Reply {
+  int32 id = 1;
+  int32 replier_id = 2;
+  int32 tweet_id = 3;
+  string date_created = 4;
+}
+
 enum AuthResult {
   INVALID_PASS = 0;
   NOT_FOUND = 1;
   GRANTED = 2;
 }
 
-message  Country {
+message Country {
   int32 id = 1;
   string iso = 2;
   string name = 3;
