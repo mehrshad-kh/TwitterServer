@@ -108,7 +108,9 @@ CREATE TABLE IF NOT EXISTS tweet_hashtags (
 CREATE TABLE IF NOT EXISTS blacklist (
     id SERIAL PRIMARY KEY,
     blocker_id INTEGER,
-    blocked_id INTEGER
+    blocked_id INTEGER,
+    date_created TIMESTAMP,
+    date_deleted TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS views (

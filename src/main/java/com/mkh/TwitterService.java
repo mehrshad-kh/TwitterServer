@@ -753,6 +753,44 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         responseObserver.onNext(MKBoolean.newBuilder().setValue(true).build());
         responseObserver.onCompleted();
     }
+    @Override
+    public void block(BLockRequest bLockRequest, StreamObserver<MKBoolean> responseObserver){
+        LocalDateTime now = LocalDateTime.now();
+        String query = "INSERT INTO blacklist (blocker_id, blocked_id ,date_created) " +
+                "VALUES (?, ?, ?);";
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, bLockRequest.getBlockerId());
+            statement.setInt(2, bLockRequest.getBlockedId());
+            statement.setTimestamp(3, Timestamp.valueOf(now));
+            statement.executeUpdate();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+        responseObserver.onNext(MKBoolean.newBuilder().setValue(true).build());
+        responseObserver.onCompleted();
+    }
+    @Override
+    public void unBlock(BLockRequest bLockRequest, StreamObserver<MKBoolean> responseObserver){
+        String query = "update  blacklist " +
+                "set date_deleted = ? " +
+                "WHERE blocker_id = ? AND blocked_id = ?;";
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setInt(2, bLockRequest.getBlockerId());
+            statement.setInt(3, bLockRequest.getBlockedId());
+            statement.executeUpdate();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+        responseObserver.onNext(MKBoolean.newBuilder().setValue(true).build());
+        responseObserver.onCompleted();
+    }
 
 }
 // to check :
