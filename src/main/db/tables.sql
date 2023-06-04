@@ -66,7 +66,9 @@ CREATE TABLE IF NOT EXISTS tweets (
 CREATE TABLE IF NOT EXISTS followings (
     id SERIAL PRIMARY KEY,
     follower_id INTEGER,
-    followee_id INTEGER
+    followee_id INTEGER,
+    date_created TIMESTAMP,
+    date_deleted TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS likes (

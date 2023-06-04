@@ -24,6 +24,8 @@ service Twitter {
   rpc SendQuote(Tweet) returns (MKBoolean) {}
   rpc SignIn(User) returns (User) {}
   rpc UpdateProfile(User) returns (User) {}
+  rpc LikeTweet(TweetLike) returns (MKBoolean) {}
+  rpc UnlikeTweet(TweetLike) returns (MKBoolean) {}
   rpc RetrieveCountries(MKEmpty) returns (stream Country ) {}
 
 }
@@ -81,7 +83,13 @@ message Tweet {
   int32 user_id = 5;
   string date_created = 6;
 }
-
+message TweetLike{
+  int32 id = 1;
+  int32 user_id = 2;
+  int32 tweet_id = 3;
+  string date_created = 4;
+  string date_deleted = 5;
+}
 enum AuthResult {
   INVALID_PASS = 0;
   NOT_FOUND = 1;

@@ -541,7 +541,6 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, user.getId());
             ResultSet resultSet = statement.executeQuery();
-
             if (resultSet.next()) {
                 System.out.println(resultSet.getString("filename"));
                 byte[] bytes = Files.readAllBytes(Paths.get("profile-photos" + resultSet.getString("filename")));
@@ -677,6 +676,44 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         responseObserver.onNext(user);
         responseObserver.onCompleted();
 
+    }
+    @Override
+    public void likeTweet(TweetLike tweetLike, StreamObserver<MKBoolean> responseObserver){
+        LocalDateTime now = LocalDateTime.now();
+        String query = "INSERT INTO likes (user_id, tweet_id ,date_created) " +
+                "VALUES (?, ?, ?);";
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, tweetLike.getUserId());
+            statement.setInt(2, tweetLike.getTweetId());
+            statement.setTimestamp(3, Timestamp.valueOf(now));
+            statement.executeUpdate();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+        responseObserver.onNext(MKBoolean.newBuilder().setValue(true).build());
+        responseObserver.onCompleted();
+    }
+    @Override
+    public void unlikeTweet(TweetLike tweetLike, StreamObserver<MKBoolean> responseObserver){
+        String query = "update  likes " +
+                "set date_deleted = ? " +
+                "WHERE user_id = ? AND tweet_id = ?;";
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setInt(2, tweetLike.getUserId());
+            statement.setInt(3, tweetLike.getTweetId());
+            statement.executeUpdate();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+        responseObserver.onNext(MKBoolean.newBuilder().setValue(true).build());
+        responseObserver.onCompleted();
     }
 }
 // to check :
