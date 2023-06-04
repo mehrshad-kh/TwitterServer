@@ -758,11 +758,21 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         LocalDateTime now = LocalDateTime.now();
         String query = "INSERT INTO blacklist (blocker_id, blocked_id ,date_created) " +
                 "VALUES (?, ?, ?);";
+        //and the date_deleted of the followings table most be null
+        String query2 = "update  followings " +
+                "set date_deleted = ? " +
+                "WHERE follower_id = ? AND followee_id = ? AND date_deleted is null;";
         try {
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, bLockRequest.getBlockerId());
             statement.setInt(2, bLockRequest.getBlockedId());
             statement.setTimestamp(3, Timestamp.valueOf(now));
+            statement.executeUpdate();
+            statement.close();
+            statement = connection.prepareStatement(query2);
+            statement.setTimestamp(1, Timestamp.valueOf(now));
+            statement.setInt(2, bLockRequest.getBlockedId());
+            statement.setInt(3, bLockRequest.getBlockerId());
             statement.executeUpdate();
             statement.close();
         } catch (SQLException e) {
