@@ -14,8 +14,27 @@ service Twitter {
   rpc IsTakenUsername(MKString) returns (MKBoolean) {}
   rpc IsTakenEmail(MKString) returns (MKBoolean) {}
   rpc IsTakenPhoneNumber(MKString) returns (MKBoolean) {}
+  rpc SubmitHeaderPhoto(HeaderPhoto) returns (MKBoolean) {}
+  rpc RetrieveHeaderPhoto(User) returns (HeaderPhoto) {}
   rpc SubmitProfilePhoto(ProfilePhoto) returns (MKBoolean) {}
+  rpc RetrieveProfilePhoto(User) returns (ProfilePhoto) {}
+  rpc UploadTweetPhoto(TweetPhoto) returns (MKBoolean) {}
+  rpc RetrieveTweetPhotos(Tweet) returns (stream MKFile) {}
+  rpc SendTweet(Tweet) returns (Tweet) {}
+  rpc SendRetweet(Tweet) returns (MKBoolean) {}
+  rpc SendQuote(Tweet) returns (Tweet) {}
   rpc SignIn(User) returns (User) {}
+  rpc UpdateProfileInfo(User) returns (User) {}
+  rpc LikeTweet(TweetLike) returns (MKBoolean) {}
+  rpc UnlikeTweet(TweetLike) returns (MKBoolean) {}
+  rpc Follow(FollowRequest) returns (MKBoolean) {}
+  rpc UnFollow(FollowRequest) returns (MKBoolean) {}
+  rpc Block(BLockRequest) returns (MKBoolean) {}
+  rpc UnBlock(BLockRequest) returns (MKBoolean) {}
+  rpc RetrieveFollowers(User) returns (stream User) {}
+  rpc RetrieveFollowees(User) returns (stream User) {}
+  rpc RetrieveTweets(User) returns (stream Tweet) {}
+  rpc searchUser(MKString) returns (stream User) {}
   rpc RetrieveCountries(MKEmpty) returns (stream Country ) {}
   rpc RetrieveLikeCount(Tweet) returns (MKInteger) {}
   rpc RetrieveReplyCount(Tweet) returns (MKInteger) {}
@@ -27,7 +46,7 @@ message AuthResponse {
 }
 
 message MKString {
-  string value = 1; 
+  string value = 1;
 }
 
 message MKBoolean {
@@ -47,6 +66,16 @@ message MKFile {
 
 message ProfilePhoto {
   int32 user_id = 1;
+  MKFile photo = 2;
+}
+
+message HeaderPhoto {
+  int32 user_id = 1;
+  MKFile photo = 2;
+}
+
+message TweetPhoto {
+  int32 tweet_id = 1;
   MKFile photo = 2;
 }
 
@@ -71,9 +100,17 @@ message User {
 message Tweet {
   int32 id = 1;
   string text = 2;
-  int32 photo_id = 3;
-  int32 tweet_id = 4;
-  string date_created = 5;
+  int32 retweet_id = 4;
+  int32 sender_id = 5;
+  string date_created = 6;
+}
+
+message TweetLike {
+  int32 id = 1;
+  int32 user_id = 2;
+  int32 tweet_id = 3;
+  string date_created = 4;
+  string date_deleted = 5;
 }
 
 message Reply {
@@ -98,4 +135,17 @@ message Country {
   int32 num_code = 6;
   int32 phone_code = 7;
 }
-
+message FollowRequest {
+  int32 id = 1;
+  int32 follower_id = 3;
+  int32 followee_id = 4;
+  string date_created = 5;
+  string date_deleted= 6;
+}
+message BLockRequest {
+  int32 id = 1;
+  int32 blocker_id = 3;
+  int32 blocked_id = 4;
+  string date_created = 5;
+  string date_deleted= 6;
+}

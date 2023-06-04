@@ -1,5 +1,6 @@
 package com.mkh;
 
+import com.google.protobuf.ByteString;
 import com.mkh.twitter.*;
 import io.grpc.stub.StreamObserver;
 
@@ -211,24 +212,302 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
     }
 
     @Override
+    public void uploadTweetPhoto(TweetPhoto tweetPhoto, StreamObserver<MKBoolean> responseObserver){
+        int id;
+        boolean result;
+        String query = "INSERT INTO photos (filename) " +
+                "VALUES (?);";
+        String query2 = "INSERT INTO tweet_photos (tweet_id, photo_id) " +
+                "VALUES (?, ?);";
+        String query3 = "SELECT id " +
+                "FROM photos " +
+                "WHERE filename = ?;";
+
+        String randomPath = RandomStringUtils.randomAlphabetic(16);
+        Path destinationPath
+                = Paths.get("files/photos" +
+                String.format("%s.%s",
+                        randomPath,
+                        tweetPhoto.getPhoto().getExtension()));
+        try {
+            Files.write(destinationPath, tweetPhoto.getPhoto().getBytes().toByteArray());
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, randomPath + "." + tweetPhoto.getPhoto().getExtension());
+            statement.execute();
+            statement.close();
+            statement = connection.prepareStatement(query3);
+            statement.setString(1, randomPath + "." + tweetPhoto.getPhoto().getExtension());
+            ResultSet resultSet = statement.executeQuery();
+            resultSet.next();
+            id = resultSet.getInt("id");
+            statement = connection.prepareStatement(query2);
+            statement.setInt(1, tweetPhoto.getTweetId());
+            statement.setInt(2, id);
+            statement.execute();
+            statement.close();
+            result = true;
+        } catch (SQLException | IOException e) {
+            e.printStackTrace();
+            result = false;
+        }
+        MKBoolean mkBoolean = MKBoolean.newBuilder().setValue(result).build();
+        responseObserver.onNext(mkBoolean);
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void retrieveTweetPhotos(Tweet tweet, StreamObserver<MKFile> responseObserver) {
+        String query = "SELECT filename " +
+                "FROM tweet_photos " +
+                "WHERE tweet_id = ?;";
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, tweet.getId());
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                String filename = resultSet.getString("filename");
+                Path path = Paths.get("files/photos/" + filename);
+                byte[] bytes = Files.readAllBytes(path);
+                MKFile mkFile = MKFile.newBuilder()
+                        .setExtension( filename.substring(filename.lastIndexOf(".") + 1))
+                        .setBytes(ByteString.copyFrom(bytes))
+                        .build();
+                responseObserver.onNext(mkFile);
+            }
+            responseObserver.onCompleted();
+        } catch (SQLException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void sendTweet(Tweet tweet, StreamObserver<Tweet> responseObserver){
+        int id;
+        String dateCreated;
+        LocalDateTime now = LocalDateTime.now();
+        String query = "INSERT INTO tweets (text, sender_id, date_created ,retweet_id) " +
+                       "VALUES (?, ?, ?, ?);";
+
+        String query2 = "SELECT id " +
+                        "FROM tweets " +
+                        "WHERE text = ? AND  date_created = ? ;";
+
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            if (tweet.getText().isEmpty())
+                statement.setNull(1, Types.VARCHAR);
+            else
+                statement.setString(1, tweet.getText());
+            statement.setInt(2, tweet.getSenderId());
+            statement.setTimestamp(3, Timestamp.valueOf(now));
+            if (tweet.getRetweetId() == 0)
+                statement.setNull(4, Types.INTEGER);
+            else
+                statement.setInt(4, tweet.getRetweetId());
+            statement.execute();
+            statement.close();
+            statement = connection.prepareStatement(query2);
+            statement.setString(1, tweet.getText());
+            statement.setTimestamp(2, Timestamp.valueOf(now));
+            ResultSet resultSet = statement.executeQuery();
+            resultSet.next();
+            id = resultSet.getInt("id");
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+        responseObserver.onNext(Tweet.newBuilder()
+                .setId(id)
+                .setSenderId(tweet.getSenderId())
+                .build());
+        responseObserver.onCompleted();
+    }
+
+    public void sendRetweet(Tweet tweet, StreamObserver<MKBoolean> responseObserver ){
+        int id;
+        String dateCreated;
+        String text;
+        LocalDateTime now = LocalDateTime.now();
+        String query = "INSERT INTO tweets (text,user_id, date_created ,retweet_id) " +
+                "VALUES (?, ?, ?, ?);";
+
+        String query2 = "SELECT  id " +
+                "FROM tweets " +
+                "WHERE date_created = ? ;";
+        String qeury3 = "SELECT text " +
+                "FROM tweets " +
+                "WHERE id = ? ;";
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            if (tweet.getText().isEmpty())
+                statement.setNull(1, Types.VARCHAR);
+            else
+                System.out.println("it is retweet and it doesn't have text");
+            statement.setInt(2, tweet.getSenderId());
+            statement.setTimestamp(3, Timestamp.valueOf(now));
+            statement.setInt(4, tweet.getRetweetId());
+            statement.execute();
+            statement.close();
+            statement = connection.prepareStatement(query2);
+            statement.setTimestamp(1, Timestamp.valueOf(now));
+            ResultSet resultSet = statement.executeQuery();
+            resultSet.next();
+            id = resultSet.getInt("id");
+            statement.close();
+            statement = connection.prepareStatement(qeury3);
+            statement.setInt(1, tweet.getRetweetId());
+            resultSet = statement.executeQuery();
+            resultSet.next();
+            text = resultSet.getString("text");
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        responseObserver.onNext(MKBoolean.newBuilder().setValue(true).build());
+        responseObserver.onCompleted();
+    }
+
+    public void sendQuote(Tweet tweet, StreamObserver<Tweet> responseObserver ) {
+        int id;
+        String dateCreated;
+        String text;
+        LocalDateTime now = LocalDateTime.now();
+        String query = "INSERT INTO tweets (text, sender_id, date_created ,retweet_id) " +
+                "VALUES (?, ?, ?, ?);";
+
+        String query2 = "SELECT  id " +
+                "FROM tweets " +
+                "WHERE date_created = ? ;";
+        ;
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            if (tweet.getText().isEmpty())
+                statement.setNull(1, Types.VARCHAR);
+            else
+                statement.setString(1, tweet.getText());
+            statement.setInt(2, tweet.getSenderId());
+            statement.setTimestamp(3, Timestamp.valueOf(now));
+            statement.setInt(4, tweet.getRetweetId());
+            statement.execute();
+            statement.close();
+            statement = connection.prepareStatement(query2);
+            statement.setTimestamp(1, Timestamp.valueOf(now));
+            ResultSet resultSet = statement.executeQuery();
+            resultSet.next();
+            id = resultSet.getInt("id");
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+        //the respondent is the retweeted tweet and has the text of its own
+        Tweet response = tweet.toBuilder().setId(id).build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+    // it's address that we use to store the photo's address must be changed
+    @Override
     public void submitProfilePhoto(ProfilePhoto profilePhoto, StreamObserver<MKBoolean> responseObserver) {
         boolean result;
         byte[] bytes = profilePhoto.getPhoto().getBytes().toByteArray();
+        String query = "INSERT INTO profile_photos (filename) " +
+                       "VALUES  (?);";
 
+        String query2 = "INSERT INTO user_profile_photos (user_id, profile_photo_id) " +
+                        "VALUES (?, ?);";
+
+        String query3 = "SELECT id " +
+                        "FROM profile_photos " +
+                        "WHERE filename = ?;";
+        String randomPath =  RandomStringUtils.randomAlphabetic(16);
         Path destinationPath
-                = Paths.get("profile-photos/" +
+                = Paths.get("profile-photos" +
                 String.format("%s.%s",
-                RandomStringUtils.randomAlphabetic(16),
+                randomPath,
                 profilePhoto.getPhoto().getExtension()));
 
         try {
             Files.write(destinationPath, bytes);
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, randomPath +"." + profilePhoto.getPhoto().getExtension());
+            statement.execute();
+            statement.close();
+            PreparedStatement statement3 = connection.prepareStatement(query3);
+            statement3.setString(1, randomPath + "." + profilePhoto.getPhoto().getExtension());
+            ResultSet resultSet = statement3.executeQuery();
+            resultSet.next();
+            int profilePhotoId = resultSet.getInt("id");
+            statement3.close();
+            PreparedStatement statement2 = connection.prepareStatement(query2);
+            statement2.setInt(1, profilePhoto.getUserId());
+            statement2.setInt(2, profilePhotoId);
+            statement2.execute();
+            statement2.close();
             result = true;
         } catch (IOException e) {
             logger.log(Level.SEVERE, "*** IO error occurred");
+            e.printStackTrace();
             result = false;
         }
+        catch (SQLException e) {
+            logger.log(Level.SEVERE, "*** SQL error occurred");
+            e.printStackTrace();
+            result = false;
+        }
+        responseObserver.onNext(MKBoolean.newBuilder().setValue(result).build());
+        responseObserver.onCompleted();
+    }
+    @Override
+    public void submitHeaderPhoto(HeaderPhoto headerPhoto, StreamObserver<MKBoolean> responseObserver){
+        boolean result;
+        byte[] bytes = headerPhoto.getPhoto().getBytes().toByteArray();
+        String query = "INSERT INTO header_photos (filename) " +
+                "VALUES  (?);";
 
+        String query2 = "INSERT INTO user_header_photos (user_id, header_photo_id) " +
+                "VALUES (?, ?);";
+
+        String query3 = "SELECT id " +
+                "FROM header_photos " +
+                "WHERE filename = ?;";
+        String randomPath =  RandomStringUtils.randomAlphabetic(16);
+        Path destinationPath
+                = Paths.get("header-photos" +
+                String.format("%s.%s",
+                        randomPath,
+                        headerPhoto.getPhoto().getExtension()));
+
+        try {
+            Files.write(destinationPath, bytes);
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, randomPath +"." + headerPhoto.getPhoto().getExtension());
+            statement.execute();
+            statement.close();
+            PreparedStatement statement3 = connection.prepareStatement(query3);
+            statement3.setString(1, randomPath + "." + headerPhoto.getPhoto().getExtension());
+            ResultSet resultSet = statement3.executeQuery();
+            resultSet.next();
+            int headerPhotoId = resultSet.getInt("id");
+            statement3.close();
+            PreparedStatement statement2 = connection.prepareStatement(query2);
+            statement2.setInt(1, headerPhoto.getUserId());
+            statement2.setInt(2, headerPhotoId);
+            statement2.execute();
+            statement2.close();
+            result = true;
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "*** IO error occurred");
+            e.printStackTrace();
+            result = false;
+        }
+        catch (SQLException e) {
+            logger.log(Level.SEVERE, "*** SQL error occurred");
+            e.printStackTrace();
+            result = false;
+        }
         responseObserver.onNext(MKBoolean.newBuilder().setValue(result).build());
         responseObserver.onCompleted();
     }
@@ -271,6 +550,79 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
         responseObserver.onCompleted();
     }
+    //it only retrieves the first photo of the user , do not forget to change it if it is needed
+    @Override
+    public void retrieveProfilePhoto(User user, StreamObserver<ProfilePhoto> responseObserver ){
+        String query = "SELECT profile_photos.filename " +
+                "FROM profile_photos " +
+                "INNER JOIN user_profile_photos " +
+                "ON profile_photos.id = user_profile_photos.profile_photo_id " +
+                "WHERE user_profile_photos.user_id = ?;";
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, user.getId());
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                System.out.println(resultSet.getString("filename"));
+                byte[] bytes = Files.readAllBytes(Paths.get("profile-photos" + resultSet.getString("filename")));
+                MKFile file = MKFile.newBuilder()
+                        .setBytes(ByteString.copyFrom(bytes))
+                        .setExtension(resultSet.getString("filename").substring(resultSet.getString("filename").lastIndexOf(".")))
+                        .build();
+                ProfilePhoto profilePhoto = ProfilePhoto.newBuilder()
+                        .setUserId(user.getId())
+                        .setPhoto(file)
+                        .build();
+                responseObserver.onNext(profilePhoto);
+            } else {
+                responseObserver.onNext(null);
+            }
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        responseObserver.onCompleted();
+    }
+    @Override
+    public void retrieveHeaderPhoto(User user, StreamObserver<HeaderPhoto>  responseObserver){
+        String query = "SELECT header_photos.filename " +
+                "FROM header_photos " +
+                "INNER JOIN user_header_photos " +
+                "ON header_photos.id = user_header_photos.header_photo_id " +
+                "WHERE user_header_photos.user_id = ?;";
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, user.getId());
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                // System.out.println(resultSet.getString("filename"));
+                byte[] bytes = Files.readAllBytes(Paths.get("header-photos" + resultSet.getString("filename")));
+                MKFile file = MKFile.newBuilder()
+                        .setBytes(ByteString.copyFrom(bytes))
+                        .setExtension(resultSet.getString("filename").substring(resultSet.getString("filename").lastIndexOf(".")))
+                        .build();
+                HeaderPhoto headerPhoto = HeaderPhoto.newBuilder()
+                        .setUserId(user.getId())
+                        .setPhoto(file)
+                        .build();
+                responseObserver.onNext(headerPhoto);
+            } else {
+                responseObserver.onNext(null);
+            }
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        responseObserver.onCompleted();
+    }
 
     @Override
     public void retrieveCountries(MKEmpty empty, StreamObserver<Country> responseObserver) {
@@ -287,7 +639,6 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
                         .build();
                 responseObserver.onNext(country);
             }
-
             statement.close();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -315,7 +666,6 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             } else {
                 count = 0;
             }
-
             statement.close();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -328,6 +678,60 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
         responseObserver.onNext(response);
         responseObserver.onCompleted();
+    }
+
+    @Override
+    public void updateProfileInfo(User user, StreamObserver<User> responseObserver){
+        String query = "UPDATE users "+
+                "Set  first_name = ?, " +
+                "last_name = ?, " +
+                "password = ?, " +
+                "email = ?, " +
+                "phone_number = ?, " +
+                "country_id = ?, " +
+                "birthdate = ?, " +
+                "date_last_modified = ?, " +
+                "bio = ?, " +
+                "location = ?, " +
+                "website = ? "+
+                "WHERE id = ? ;";
+        LocalDateTime now = LocalDateTime.now();
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, user.getFirstName());
+            statement.setString(2, user.getLastName());
+            statement.setString(3, user.getPassword());
+            statement.setString(4, user.getEmail());
+            if (user.getPhoneNumber().isEmpty())
+                statement.setNull(5, Types.VARCHAR);
+            else
+                statement.setString(5, user.getPhoneNumber());
+            statement.setInt(6, user.getCountryId());
+            statement.setDate(7, java.sql.Date.valueOf(user.getBirthdate()));
+            statement.setTimestamp(8, Timestamp.valueOf(now));
+            if (user.getBio().isEmpty())
+                statement.setNull(9, Types.VARCHAR);
+            else
+                statement.setString(9, user.getBio());
+            if (user.getLocation().isEmpty())
+                statement.setNull(10, Types.VARCHAR);
+            else
+                statement.setString(10, user.getLocation());
+            if (user.getWebsite().isEmpty())
+                statement.setNull(11, Types.VARCHAR);
+            else
+                statement.setString(11, user.getWebsite());
+            statement.setInt(12, user.getId());
+            statement.executeUpdate();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        responseObserver.onNext(user);
+        responseObserver.onCompleted();
+
     }
 
     @Override
@@ -363,6 +767,26 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
     }
 
     @Override
+    public void likeTweet(TweetLike tweetLike, StreamObserver<MKBoolean> responseObserver){
+        LocalDateTime now = LocalDateTime.now();
+        String query = "INSERT INTO likes (user_id, tweet_id ,date_created) " +
+                "VALUES (?, ?, ?);";
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, tweetLike.getUserId());
+            statement.setInt(2, tweetLike.getTweetId());
+            statement.setTimestamp(3, Timestamp.valueOf(now));
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        responseObserver.onNext(MKBoolean.newBuilder().setValue(true).build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
     public void retrieveRetweetCount(Tweet tweet, StreamObserver<MKInteger> responseObserver) {
         int count;
         String query = "SELECT COUNT(id) " +
@@ -393,4 +817,222 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
+
+    @Override
+    public void unlikeTweet(TweetLike tweetLike, StreamObserver<MKBoolean> responseObserver){
+        String query = "update  likes " +
+                "set date_deleted = ? " +
+                "WHERE user_id = ? AND tweet_id = ?;";
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setInt(2, tweetLike.getUserId());
+            statement.setInt(3, tweetLike.getTweetId());
+            statement.executeUpdate();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        responseObserver.onNext(MKBoolean.newBuilder().setValue(true).build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void follow(FollowRequest followRequest, StreamObserver<MKBoolean> responseObserver){
+        LocalDateTime now = LocalDateTime.now();
+        String query = "INSERT INTO followings (follower_id, followee_id ,date_created) " +
+                "VALUES (?, ?, ?);";
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, followRequest.getFollowerId());
+            statement.setInt(2, followRequest.getFolloweeId());
+            statement.setTimestamp(3, Timestamp.valueOf(now));
+            statement.executeUpdate();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+        responseObserver.onNext(MKBoolean.newBuilder().setValue(true).build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void unFollow(FollowRequest followRequest, StreamObserver<MKBoolean> responseObserver){
+        String query = "update  followings " +
+                "set date_deleted = ? " +
+                "WHERE follower_id = ? AND followee_id = ?;";
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setInt(2, followRequest.getFollowerId());
+            statement.setInt(3, followRequest.getFolloweeId());
+            statement.executeUpdate();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+        responseObserver.onNext(MKBoolean.newBuilder().setValue(true).build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void block(BLockRequest bLockRequest, StreamObserver<MKBoolean> responseObserver){
+        LocalDateTime now = LocalDateTime.now();
+        String query = "INSERT INTO blacklist (blocker_id, blocked_id ,date_created) " +
+                "VALUES (?, ?, ?);";
+        //and the date_deleted of the followings table most be null
+        String query2 = "update  followings " +
+                "set date_deleted = ? " +
+                "WHERE follower_id = ? AND followee_id = ? AND date_deleted is null;";
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, bLockRequest.getBlockerId());
+            statement.setInt(2, bLockRequest.getBlockedId());
+            statement.setTimestamp(3, Timestamp.valueOf(now));
+            statement.executeUpdate();
+            statement.close();
+            statement = connection.prepareStatement(query2);
+            statement.setTimestamp(1, Timestamp.valueOf(now));
+            statement.setInt(2, bLockRequest.getBlockedId());
+            statement.setInt(3, bLockRequest.getBlockerId());
+            statement.executeUpdate();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+        responseObserver.onNext(MKBoolean.newBuilder().setValue(true).build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void unBlock(BLockRequest bLockRequest, StreamObserver<MKBoolean> responseObserver){
+        String query = "update  blacklist " +
+                "set date_deleted = ? " +
+                "WHERE blocker_id = ? AND blocked_id = ?;";
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setInt(2, bLockRequest.getBlockerId());
+            statement.setInt(3, bLockRequest.getBlockedId());
+            statement.executeUpdate();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+        responseObserver.onNext(MKBoolean.newBuilder().setValue(true).build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void retrieveFollowers(User user , StreamObserver<User> responseObserver){
+        String query = "SELECT * FROM users WHERE id IN (SELECT follower_id FROM followings WHERE followee_id = ? AND date_deleted is null);";
+
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, user.getId());
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                responseObserver.onNext(User.newBuilder()
+                        .setId(resultSet.getInt("id"))
+                        .setUsername(resultSet.getString("username"))
+                        .setEmail(resultSet.getString("email"))
+                        .setFirstName(resultSet.getString("first_name"))
+                        .setLastName(resultSet.getString("last_name"))
+                        .setBirthdate(resultSet.getString("birthdate"))
+                        .build());
+            }
+            resultSet.close();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void retrieveFollowees(User user , StreamObserver<User> responseObserver){
+        String query = "SELECT * FROM users WHERE id IN (SELECT followee_id FROM followings WHERE follower_id = ? AND date_deleted is null);";
+
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, user.getId());
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                System.out.println(resultSet.getString("username"));
+                responseObserver.onNext(User.newBuilder()
+                        .setId(resultSet.getInt("id"))
+                        .setUsername(resultSet.getString("username"))
+                        .setEmail(resultSet.getString("email"))
+                        .setFirstName(resultSet.getString("first_name"))
+                        .setLastName(resultSet.getString("last_name"))
+                        .setBirthdate(resultSet.getString("birthdate"))
+                        .build());
+            }
+            resultSet.close();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+        responseObserver.onCompleted();
+    }
+    public void searchUser(MKString mkString , StreamObserver<User> responseObserver){
+        String query = "SELECT * FROM users WHERE username LIKE ? OR first_name LIKE ? OR last_name LIKE ?;";
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, "%" + mkString.getValue() + "%");
+            statement.setString(2, "%" + mkString.getValue() + "%");
+            statement.setString(3, "%" + mkString.getValue() + "%");
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                responseObserver.onNext(User.newBuilder()
+                        .setId(resultSet.getInt("id"))
+                        .setUsername(resultSet.getString("username"))
+                        .build());
+            }
+            resultSet.close();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+        responseObserver.onCompleted();
+    }
+    public void retrieveTweets(User user, StreamObserver<Tweet> responseObserver){
+        String query = "SELECT * FROM tweets " +
+                "WHERE sender_id = ?;";
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, user.getId());
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                responseObserver.onNext(Tweet.newBuilder()
+                        .setId(resultSet.getInt("id"))
+                        .setSenderId(resultSet.getInt("sender_id"))
+                        .setText(resultSet.getString("text"))
+                        .setDateCreated(resultSet.getString("date_created"))
+                        .setRetweetId(resultSet.getInt("retweet_id"))
+                        .build());
+            }
+            resultSet.close();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+        responseObserver.onCompleted();
+    }
 }
+// to check :
+// 1- address that we use to store the photo's address must be changed : check
+// 2- it only retrieves the first photo of the user , do not forget to change it if it is needed
+//we get a User as input and use its id to retrieve the photo but how to handel if the user doesn't have a photo
+// or it doesn't exist in the database
+
