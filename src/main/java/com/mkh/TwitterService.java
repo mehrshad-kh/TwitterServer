@@ -223,7 +223,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
         String randomPath = RandomStringUtils.randomAlphabetic(16);
         Path destinationPath
-                = Paths.get("D:\\" +
+                = Paths.get("tweet-photos" +
                 String.format("%s.%s",
                         randomPath,
                         file.getExtension()));
@@ -249,7 +249,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         responseObserver.onCompleted();
     }
     @Override
-    public void submitTweet(Tweet tweet, StreamObserver<Tweet> responseObserver){
+    public void sendTweet(Tweet tweet, StreamObserver<Tweet> responseObserver){
         int id;
         String dateCreated;
         LocalDateTime now = LocalDateTime.now();
@@ -295,7 +295,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
-    public void submitRetweet(Tweet tweet, StreamObserver<Tweet> responseObserver ){
+    public void sendRetweet(Tweet tweet, StreamObserver<Tweet> responseObserver ){
         int id;
         String dateCreated;
         String text;
@@ -347,7 +347,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
-    public void submitQuote(Tweet tweet, StreamObserver<Tweet> responseObserver ) {
+    public void sendQuote(Tweet tweet, StreamObserver<Tweet> responseObserver ) {
         int id;
         String dateCreated;
         String text;
@@ -406,7 +406,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
                         "WHERE filename = ?;";
         String randomPath =  RandomStringUtils.randomAlphabetic(16);
         Path destinationPath
-                = Paths.get("D:\\" +
+                = Paths.get("profile-photos" +
                 String.format("%s.%s",
                 randomPath,
                 profilePhoto.getPhoto().getExtension()));
@@ -457,7 +457,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
                 "WHERE filename = ?;";
         String randomPath =  RandomStringUtils.randomAlphabetic(16);
         Path destinationPath
-                = Paths.get("D:\\" +
+                = Paths.get("header-photos" +
                 String.format("%s.%s",
                         randomPath,
                         headerPhoto.getPhoto().getExtension()));
@@ -547,7 +547,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
             if (resultSet.next()) {
                 System.out.println(resultSet.getString("filename"));
-                byte[] bytes = Files.readAllBytes(Paths.get("D:\\" + resultSet.getString("filename")));
+                byte[] bytes = Files.readAllBytes(Paths.get("profile-photos" + resultSet.getString("filename")));
                 MKFile file = MKFile.newBuilder()
                         .setBytes(ByteString.copyFrom(bytes))
                         .setExtension(resultSet.getString("filename").substring(resultSet.getString("filename").lastIndexOf(".")))
@@ -584,7 +584,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
             if (resultSet.next()) {
                 // System.out.println(resultSet.getString("filename"));
-                byte[] bytes = Files.readAllBytes(Paths.get("D:\\" + resultSet.getString("filename")));
+                byte[] bytes = Files.readAllBytes(Paths.get("header-photos" + resultSet.getString("filename")));
                 MKFile file = MKFile.newBuilder()
                         .setBytes(ByteString.copyFrom(bytes))
                         .setExtension(resultSet.getString("filename").substring(resultSet.getString("filename").lastIndexOf(".")))

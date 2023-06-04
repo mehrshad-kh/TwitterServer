@@ -57,8 +57,7 @@ CREATE TABLE IF NOT EXISTS tweets (
     id SERIAL PRIMARY KEY,
     text VARCHAR(280),
     photo_id INTEGER REFERENCES photos (id),
-   --we don't need the tweet_id column here
-   -- tweet_id INTEGER REFERENCES tweets (id),
+    tweet_id INTEGER REFERENCES tweets (id),
     user_id INTEGER REFERENCES users (id),
     date_created TIMESTAMP
   
