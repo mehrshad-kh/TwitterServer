@@ -894,6 +894,30 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         }
         responseObserver.onCompleted();
     }
+    public void retrieveTweets(User user, StreamObserver<Tweet> responseObserver){
+        String query = "SELECT * FROM tweets " +
+                "WHERE sender_id = ?;";
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, user.getId());
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                responseObserver.onNext(Tweet.newBuilder()
+                        .setId(resultSet.getInt("id"))
+                        .setSenderId(resultSet.getInt("sender_id"))
+                        .setText(resultSet.getString("text"))
+                        .setDateCreated(resultSet.getString("date_created"))
+                        .setRetweetId(resultSet.getInt("retweet_id"))
+                        .build());
+            }
+            resultSet.close();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+        responseObserver.onCompleted();
+    }
 
 }
 // to check :
