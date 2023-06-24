@@ -1,21 +1,14 @@
 package com.mkh;
 
-import com.mkh.twitter.*;
 import io.grpc.Grpc;
 import io.grpc.InsecureServerCredentials;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
-import io.grpc.stub.StreamObserver;
-import org.checkerframework.checker.units.qual.A;
+
 import  java.sql.*;
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class TwitterServer {
@@ -23,7 +16,7 @@ public class TwitterServer {
 
     private final int port;
     private final Server server;
-    private final Connection connection;
+    private final Connection databaseConnection;
 
     public TwitterServer(int port) throws SQLException {
         this(Grpc.newServerBuilderForPort(port, InsecureServerCredentials.create()), port);
@@ -32,8 +25,8 @@ public class TwitterServer {
     public TwitterServer(ServerBuilder<?> serverBuilder, int port) throws SQLException {
         this.port = port;
         // Preferred: DataSource instead of DriverManager.
-        connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/twitterdb", "shared_user", "1234");
-        server = serverBuilder.addService(new TwitterService(connection)).build();
+        databaseConnection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/twitterdb", "shared_user", "1234");
+        server = serverBuilder.addService(new TwitterService(databaseConnection)).build();
     }
 
     /** Start serving requests. */
@@ -59,7 +52,7 @@ public class TwitterServer {
     public void stop() throws InterruptedException, SQLException {
         if (server != null) {
             // Throws SQLException.
-            connection.close();
+            databaseConnection.close();
             // Throws InterruptedException.
             server.shutdown().awaitTermination(30, TimeUnit.SECONDS);
         }
