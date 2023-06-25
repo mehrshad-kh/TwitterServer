@@ -549,6 +549,8 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
     @Override
     public void retrieveCountries(MKEmpty empty, StreamObserver<Country> responseObserver) {
+        logger.info("retrieveCountries was called.");
+
         String query = "SELECT id, name " +
                 "FROM countries;";
 
