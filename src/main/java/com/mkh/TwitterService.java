@@ -4,7 +4,7 @@ import com.google.protobuf.ByteString;
 import com.mkh.twitter.*;
 import io.grpc.stub.StreamObserver;
 
-import org.apache.commons.lang3.RandomStringUtils;
+// import org.apache.commons.lang3.RandomStringUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -14,6 +14,7 @@ import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -59,12 +60,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             if (resultSet.next()) {
                 int count = resultSet.getInt(1);
 
-                if (count == 0) {
-                    result = false;
-                }
-                else {
-                    result = true;
-                }
+                result = count != 0;
             }
 
             statement.close();
@@ -90,13 +86,10 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             statement.setString(1, email.getValue());
             ResultSet resultSet = statement.executeQuery();
 
-               if (resultSet.next()){
-                    int count = resultSet.getInt(1);
-                    if (count == 0) {
-                        result = false;
-                    } else {
-                        result = true;
-                    }
+               if (resultSet.next()) {
+
+                   int count = resultSet.getInt(1);
+                   result = count != 0;
                }
 
                statement.close();
@@ -123,12 +116,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
             if (resultSet.next()) {
                 int count = resultSet.getInt(1);
-
-                if (count == 0) {
-                    result = false;
-                } else {
-                    result = true;
-                }
+                result = count != 0;
             }
 
            statement.close();
@@ -208,7 +196,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
                 "FROM photos " +
                 "WHERE filename = ?;";
 
-        String randomFilename = RandomStringUtils.randomAlphabetic(16);
+        String randomFilename = UUID.randomUUID().toString();
         Path destinationPath
                 = Paths.get("user-files/photos/" +
                 String.format("%s.%s",
@@ -340,7 +328,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         String query3 = "SELECT id " +
                         "FROM profile_photos " +
                         "WHERE filename = ?;";
-        String randomFilename = RandomStringUtils.randomAlphabetic(16);
+        String randomFilename = UUID.randomUUID().toString();
         Path destinationPath
                 = Paths.get("user-files/profile-photos/" +
                 String.format("%s.%s",
@@ -390,7 +378,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         String query3 = "SELECT id " +
                 "FROM header_photos " +
                 "WHERE filename = ?;";
-        String randomFilename =  RandomStringUtils.randomAlphabetic(16);
+        String randomFilename = UUID.randomUUID().toString();
         Path destinationPath
                 = Paths.get("user-files/header-photos/" +
                 String.format("%s.%s",

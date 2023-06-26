@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS photos (
     id SERIAL PRIMARY KEY,
-    filename VARCHAR(100)
+    filename CHAR(36)
 );
 
 CREATE TABLE IF NOT EXISTS tweet_photos (
@@ -37,8 +37,8 @@ CREATE TABLE IF NOT EXISTS tweet_photos (
 );
 
 CREATE TABLE IF NOT EXISTS profile_photos (
-    id SERIAL PRIMARY KEY,    
-    filename VARCHAR(100)
+    id SERIAL PRIMARY KEY,
+    filename CHAR(36)
 );
 
 CREATE TABLE IF NOT EXISTS user_profile_photos (
@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS user_profile_photos (
 
 CREATE TABLE IF NOT EXISTS header_photos (
     id SERIAL PRIMARY KEY,
-    filename VARCHAR(100)
+    filename CHAR(36)
 );
 
 CREATE TABLE IF NOT EXISTS user_header_photos (
