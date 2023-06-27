@@ -544,7 +544,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
             while (resultSet.next()) {
                 Country country = Country.newBuilder()
-                        .setId(resultSet.getInt("id")).setName(resultSet.getString("nice_name"))
+                        .setId(resultSet.getInt("id")).setNiceName(resultSet.getString("nice_name"))
                         .build();
                 responseObserver.onNext(country);
             }
