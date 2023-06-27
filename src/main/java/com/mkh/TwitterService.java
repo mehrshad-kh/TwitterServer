@@ -66,7 +66,6 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             statement.close();
         } catch (SQLException e) {
             e.printStackTrace();
-            return;
         }
 
         MKBoolean response = MKBoolean.newBuilder().setValue(result).build();
@@ -77,9 +76,9 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
     @Override
     public void isTakenEmail(MKString email, StreamObserver<MKBoolean> responseObserver){
         boolean result = false;
-        String query = "SELECT COUNT(*)" +
+        String query = "SELECT COUNT(*) " +
                 "FROM users " +
-                "Where email = ? ;";
+                "WHERE email = ?;";
 
         try {
             PreparedStatement statement = connection.prepareStatement(query);
@@ -95,7 +94,6 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
                statement.close();
         } catch (SQLException e) {
             e.printStackTrace();
-            return;
         }
 
         MKBoolean response = MKBoolean.newBuilder().setValue(result).build();
@@ -120,9 +118,8 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             }
 
            statement.close();
-        } catch (SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
-            return;
         }
 
         MKBoolean response = MKBoolean.newBuilder().setValue(result).build();
@@ -130,6 +127,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         responseObserver.onCompleted();
     }
 
+    // TODO: An error response must be sent in case an exception is thrown.
     @Override
     public void signUp(User user, StreamObserver<User> responseObserver) {
         LocalDateTime now = LocalDateTime.now();
@@ -187,7 +185,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
     @Override
     public void uploadTweetPhoto(TweetPhoto tweetPhoto, StreamObserver<MKBoolean> responseObserver) {
         int id;
-        boolean result;
+        boolean result = false;
         String query = "INSERT INTO photos (filename) " +
                 "VALUES (?);";
         String query2 = "INSERT INTO tweet_photos (tweet_id, photo_id) " +
@@ -221,7 +219,6 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             result = true;
         } catch (SQLException | IOException e) {
             e.printStackTrace();
-            result = false;
         }
 
         MKBoolean mkBoolean = MKBoolean.newBuilder().setValue(result).build();
@@ -539,7 +536,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
     public void retrieveCountries(MKEmpty empty, StreamObserver<Country> responseObserver) {
         logger.info("retrieveCountries was called.");
 
-        String query = "SELECT id, name " +
+        String query = "SELECT id, nice_name " +
                 "FROM countries;";
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
@@ -547,13 +544,12 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
             while (resultSet.next()) {
                 Country country = Country.newBuilder()
-                        .setId(resultSet.getInt("id")).setName(resultSet.getString("name"))
+                        .setId(resultSet.getInt("id")).setName(resultSet.getString("nice_name"))
                         .build();
                 responseObserver.onNext(country);
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            return;
         }
 
         responseObserver.onCompleted();
