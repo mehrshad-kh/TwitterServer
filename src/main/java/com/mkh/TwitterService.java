@@ -49,6 +49,8 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
     @Override
     public void isTakenUsername(MKString username, StreamObserver<MKBoolean> responseObserver) {
+        logger.info("isTakenUsername() was called.");
+
         boolean result = false;
         String query = "SELECT COUNT(*) " +
                 "FROM users " +
