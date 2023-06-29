@@ -440,7 +440,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
                         .setUsername(resultSet.getString("username"))
                         .setEmail(resultSet.getString("email"))
                         // Possible error: may be null and hence incur problems.
-                        .setPhoneNumber(resultSet.getString("phone_number"))
+                        .setPhoneNumber(resultSet.getString("phone_number") == null ? "" : resultSet.getString("phone_number"))
                         .setCountryId(resultSet.getInt("country_id"))
                         .setBirthdate(resultSet.getDate("birthdate").toString())
                         .build();
@@ -451,7 +451,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            return;
+            responseObserver.onNext(null);
         }
 
         responseObserver.onCompleted();
