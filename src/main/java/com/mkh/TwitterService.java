@@ -2,6 +2,7 @@ package com.mkh;
 
 import com.google.protobuf.ByteString;
 import com.mkh.twitter.*;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
 // import org.apache.commons.lang3.RandomStringUtils;
@@ -446,12 +447,15 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
                         .build();
                 responseObserver.onNext(signedInUser);
             } else {
-                // Possible error.
-                responseObserver.onNext(null);
+                Status status = Status.UNAUTHENTICATED.withDescription("Incorrect username or password");
+                responseObserver.onError(status.asRuntimeException());
+                return;
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            responseObserver.onNext(null);
+            Status status = Status.INTERNAL.withDescription("Database error occurred.");
+            responseObserver.onError(status.asRuntimeException());
+            return;
         }
 
         responseObserver.onCompleted();
