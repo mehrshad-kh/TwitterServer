@@ -35,12 +35,64 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
     @Override
     public void getDailyBriefing(User user, StreamObserver<Tweet> responseObserver) {
+        String query = "SELECT id, text, retweet_id, sender_id, date_created " +
+                "FROM tweets " +
+                "WHERE id IN ( " +
+                "    SELECT tweet_id " +
+                "    FROM views " +
+                "    WHERE tweet_id NOT IN ( " +
+                "        SELECT tweet_id " +
+                "        FROM tweets " +
+                "        WHERE user_id IN ( " +
+                "            SELECT blocker_id " +
+                "            FROM blacklist " +
+                "            WHERE blocked_id =  ? " +
+                "        ) " +
+                "    ) " +
+                "    GROUP BY tweet_id " +
+                "    HAVING COUNT(tweet_id) >= 10 " +
+                "    )  " +
+                "OR (sender_id IN ( " +
+                "        SELECT followee_id  " +
+                "        FROM followings " +
+                "        WHERE follower_id =  ? AND date_deleted IS NOT NULL " +
+                "    ) AND retweet_id NOT IN ( " +
+                "        SELECT tweet_id " +
+                "        FROM views " +
+                "        WHERE user_id =  ? " +
+                "    ) " +
+                "); ";
+
         ArrayList<Tweet> tweets = new ArrayList<>();
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, user.getId());
+            statement.setInt(2, user.getId());
+            statement.setInt(3, user.getId());
+            System.out.printf("Query: %s\n", "hi");
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                int id = resultSet.getInt(1);
+                String text = resultSet.getString(2);
+                int RetweetId = resultSet.getInt(3);
+                int SenderId = resultSet.getInt(4);
+                String dateCreated = resultSet.getString(5);
 
-        for (int i = 0; i < 3; i++) {
-            tweets.add(Tweet.newBuilder().setText("Hello, folks! This is Tweet number " + (i + 1) + "!").build());
+                Tweet tweet = Tweet.newBuilder()
+                        .setId(id)
+                        .setText(text)
+                        .setRetweetId(RetweetId)
+                        .setSenderId(SenderId)
+                        .setDateCreated(dateCreated)
+                        .build();
+                tweets.add(tweet);
+            }
+
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
         }
-
         for (Tweet tweet : tweets) {
             responseObserver.onNext(tweet);
         }
@@ -918,6 +970,8 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
                 responseObserver.onNext(User.newBuilder()
                         .setId(resultSet.getInt("id"))
                         .setUsername(resultSet.getString("username"))
+                        .setFirstName(resultSet.getString("first_name"))
+                            .setLastName(resultSet.getString("last_name"))
                         .build());
             }
         } catch (SQLException e) {
