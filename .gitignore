@@ -42,3 +42,4 @@ build/
 user-files/profile-photos/*.jpeg
 
 compile.sh
+run.sh

@@ -420,6 +420,8 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
     // Possible error: only retrieves a handful of user info.
     @Override
     public void signIn(User user, StreamObserver<User> responseObserver) {
+        logger.info("signIn() was called.");
+
         String query = "SELECT id, first_name, last_name, username, email, " +
                 "phone_number, country_id, birthdate " +
                 "FROM users " +
@@ -536,7 +538,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
     @Override
     public void retrieveCountries(MKEmpty empty, StreamObserver<Country> responseObserver) {
-        logger.info("retrieveCountries was called.");
+        logger.info("retrieveCountries() was called.");
 
         String query = "SELECT id, nice_name " +
                 "FROM countries;";
