@@ -182,7 +182,6 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         responseObserver.onCompleted();
     }
 
-    // TODO: An error response must be sent in case an exception is thrown.
     @Override
     public void signUp(User user, StreamObserver<User> responseObserver) {
         LocalDateTime now = LocalDateTime.now();
@@ -227,6 +226,8 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             statement.close();
         } catch (SQLException e) {
             e.printStackTrace();
+            Status status = Status.INTERNAL.withDescription("Database error occurred.");
+            responseObserver.onError(status.asRuntimeException());
             return;
         }
 
