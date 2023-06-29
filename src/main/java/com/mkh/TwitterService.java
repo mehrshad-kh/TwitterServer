@@ -477,7 +477,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         logger.info("signIn() was called.");
 
         String query = "SELECT id, first_name, last_name, username, email, " +
-                "phone_number, country_id, birthdate " +
+                "phone_number, country_id, birthdate, bio, location, website " +
                 "FROM users " +
                 "WHERE username = ? " +
                 "AND password = ?;";
@@ -493,14 +493,16 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
                         .setLastName(resultSet.getString("last_name"))
                         .setUsername(resultSet.getString("username"))
                         .setEmail(resultSet.getString("email"))
-                        // Possible error: may be null and hence incur problems.
                         .setPhoneNumber(resultSet.getString("phone_number") == null ? "" : resultSet.getString("phone_number"))
                         .setCountryId(resultSet.getInt("country_id"))
                         .setBirthdate(resultSet.getDate("birthdate").toString())
+                        .setBio(resultSet.getString("bio") == null ? "" : resultSet.getString("bio"))
+                        .setLocation(resultSet.getString("location") == null ? "" : resultSet.getString("location"))
+                        .setWebsite(resultSet.getString("website") == null ? "" : resultSet.getString("website"))
                         .build();
                 responseObserver.onNext(signedInUser);
             } else {
-                Status status = Status.UNAUTHENTICATED.withDescription("Incorrect username or password");
+                Status status = Status.UNAUTHENTICATED.withDescription("Incorrect username or password.");
                 responseObserver.onError(status.asRuntimeException());
                 return;
             }
@@ -972,7 +974,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
                         .setId(resultSet.getInt("id"))
                         .setUsername(resultSet.getString("username"))
                         .setFirstName(resultSet.getString("first_name"))
-                            .setLastName(resultSet.getString("last_name"))
+                        .setLastName(resultSet.getString("last_name"))
                         .build());
             }
         } catch (SQLException e) {
