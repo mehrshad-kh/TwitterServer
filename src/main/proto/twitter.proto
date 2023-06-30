@@ -13,7 +13,7 @@ service Twitter {
   rpc IsTakenUsername(MKString) returns (MKBoolean) {}
   rpc IsTakenEmail(MKString) returns (MKBoolean) {}
   rpc IsTakenPhoneNumber(MKString) returns (MKBoolean) {}
-  rpc SubmitHeaderPhoto(HeaderPhoto) returns (MKBoolean) {}
+  rpc SubmitHeaderPhoto(HeaderPhoto) returns (MKEmpty) {}
   rpc RetrieveHeaderPhoto(User) returns (HeaderPhoto) {}
   rpc SubmitProfilePhoto(ProfilePhoto) returns (MKBoolean) {}
   rpc RetrieveProfilePhoto(User) returns (ProfilePhoto) {}
