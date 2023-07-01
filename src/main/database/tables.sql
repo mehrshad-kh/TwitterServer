@@ -30,6 +30,14 @@ CREATE TABLE IF NOT EXISTS photos (
     filename CHAR(36)
 );
 
+CREATE TABLE IF NOT EXISTS tweets (
+    id SERIAL PRIMARY KEY,
+    text VARCHAR(280),
+    retweet_id INTEGER REFERENCES tweets (id),
+    sender_id INTEGER REFERENCES users (id),
+    date_created TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS tweet_photos (
     id SERIAL PRIMARY KEY,
     tweet_id INTEGER REFERENCES tweets (id),
@@ -56,14 +64,6 @@ CREATE TABLE IF NOT EXISTS user_header_photos (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users (id),
     header_photo_id INTEGER REFERENCES header_photos (id)
-);
-
-CREATE TABLE IF NOT EXISTS tweets (
-    id SERIAL PRIMARY KEY,
-    text VARCHAR(280),
-    retweet_id INTEGER REFERENCES tweets (id),
-    sender_id INTEGER REFERENCES users (id),
-    date_created TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS followings (

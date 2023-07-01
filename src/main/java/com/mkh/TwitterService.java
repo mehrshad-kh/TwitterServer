@@ -35,34 +35,37 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
     @Override
     public void getDailyBriefing(User user, StreamObserver<Tweet> responseObserver) {
-        System.out.printf("getDailyBriefing() was called by the client.%n");
+        System.out.println("getDailyBriefing() was called by the client.");
+
         String query = "SELECT id, text, retweet_id, sender_id, date_created " +
-                "FROM tweets " +
-                "WHERE id IN ( " +
-                "    SELECT tweet_id " +
-                "    FROM views " +
-                "    WHERE tweet_id NOT IN ( " +
-                "        SELECT tweet_id " +
-                "        FROM tweets " +
-                "        WHERE user_id IN ( " +
-                "            SELECT blocker_id " +
-                "            FROM blacklist " +
-                "            WHERE blocked_id =  ? " +
-                "        ) " +
-                "    ) " +
-                "    GROUP BY tweet_id " +
-                "    HAVING COUNT(tweet_id) >= 10 " +
-                "    )  " +
-                "OR (sender_id IN ( " +
-                "        SELECT followee_id  " +
-                "        FROM followings " +
-                "        WHERE follower_id =  ? AND date_deleted IS NOT NULL " +
-                "    ) AND retweet_id NOT IN ( " +
-                "        SELECT tweet_id " +
-                "        FROM views " +
-                "        WHERE user_id =  ? " +
-                "    ) " +
-                "); ";
+                "FROM tweets WHERE id = " + user.getId() + ";";
+//        String query = "SELECT id, text, retweet_id, sender_id, date_created " +
+//                "FROM tweets " +
+//                "WHERE id IN ( " +
+//                "    SELECT tweet_id " +
+//                "    FROM views " +
+//                "    WHERE tweet_id NOT IN ( " +
+//                "        SELECT tweet_id " +
+//                "        FROM tweets " +
+//                "        WHERE user_id IN ( " +
+//                "            SELECT blocker_id " +
+//                "            FROM blacklist " +
+//                "            WHERE blocked_id =  ? " +
+//                "        ) " +
+//                "    ) " +
+//                "    GROUP BY tweet_id " +
+//                "    HAVING COUNT(tweet_id) >= 10 " +
+//                "    )  " +
+//                "OR (sender_id IN ( " +
+//                "        SELECT followee_id  " +
+//                "        FROM followings " +
+//                "        WHERE follower_id =  ? AND date_deleted IS NOT NULL " +
+//                "    ) AND retweet_id NOT IN ( " +
+//                "        SELECT tweet_id " +
+//                "        FROM views " +
+//                "        WHERE user_id =  ? " +
+//                "    ) " +
+//                "); ";
 
         ArrayList<Tweet> tweets = new ArrayList<>();
         try {
@@ -70,7 +73,6 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             statement.setInt(1, user.getId());
             statement.setInt(2, user.getId());
             statement.setInt(3, user.getId());
-            System.out.printf("Query: %s\n", "hi");
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 int id = resultSet.getInt(1);
@@ -94,6 +96,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             e.printStackTrace();
             return;
         }
+        
         for (Tweet tweet : tweets) {
             responseObserver.onNext(tweet);
         }
