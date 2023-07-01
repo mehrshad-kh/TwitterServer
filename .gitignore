@@ -39,5 +39,4 @@ build/
 ### Mac OS ###
 .DS_Store
 
-user-files/header-photos/*
-user-files/profile-photos/*.jpeg
+user-files/*
