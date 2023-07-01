@@ -433,8 +433,9 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
     }
 
     @Override
-    public void submitHeaderPhoto(HeaderPhoto headerPhoto, StreamObserver<MKBoolean> responseObserver) {
-        boolean result;
+    public void submitHeaderPhoto(HeaderPhoto headerPhoto, StreamObserver<MKEmpty> responseObserver) {
+        logger.info("submitHeaderPhoto() was called.");
+
         byte[] bytes = headerPhoto.getPhoto().getBytes().toByteArray();
         String query = "INSERT INTO header_photos (filename) " +
                 "VALUES (?);";
@@ -467,19 +468,22 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             statement2.setInt(2, headerPhotoId);
             statement2.execute();
             statement2.close();
-            result = true;
         } catch (IOException e) {
             logger.log(Level.SEVERE, "*** IO error occurred");
             e.printStackTrace();
-            result = false;
+            Status errorStatus = Status.INTERNAL.withDescription("Could not store file.");
+            responseObserver.onError(errorStatus.asRuntimeException());
+            return;
         }
         catch (SQLException e) {
             logger.log(Level.SEVERE, "*** SQL error occurred");
             e.printStackTrace();
-            result = false;
+            Status errorStatus = Status.INTERNAL.withDescription("Database error occurred.");
+            responseObserver.onError(errorStatus.asRuntimeException());
+            return;
         }
 
-        responseObserver.onNext(MKBoolean.newBuilder().setValue(result).build());
+        responseObserver.onNext(MKEmpty.newBuilder().build());
         responseObserver.onCompleted();
     }
 
@@ -514,14 +518,14 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
                         .build();
                 responseObserver.onNext(signedInUser);
             } else {
-                Status status = Status.UNAUTHENTICATED.withDescription("Incorrect username or password.");
-                responseObserver.onError(status.asRuntimeException());
+                Status errorStatus = Status.UNAUTHENTICATED.withDescription("Incorrect username or password.");
+                responseObserver.onError(errorStatus.asRuntimeException());
                 return;
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            Status status = Status.INTERNAL.withDescription("Database error occurred.");
-            responseObserver.onError(status.asRuntimeException());
+            Status errorStatus = Status.INTERNAL.withDescription("Database error occurred.");
+            responseObserver.onError(errorStatus.asRuntimeException());
             return;
         }
 
@@ -630,52 +634,35 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         responseObserver.onCompleted();
     }
 
-    // Updating the password must be done through proper channels.
     @Override
     public void updateProfileInfo(User user, StreamObserver<User> responseObserver) {
         String query = "UPDATE users "+
-                "SET first_name = ?, " +
-                "last_name = ?, " +
-                "password = ?, " +
-                "email = ?, " +
-                "phone_number = ?, " +
-                "country_id = ?, " +
-                "birthdate = ?, " +
-                "bio = ?, " +
+                "SET bio = ?, " +
                 "location = ?, " +
                 "website = ?, " +
                 "date_last_modified = ? " +
                 "WHERE id = ?;";
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setString(1, user.getFirstName());
-            statement.setString(2, user.getLastName());
-            statement.setString(3, user.getPassword());
-            statement.setString(4, user.getEmail());
-            if (user.getPhoneNumber().isEmpty()) {
-                statement.setNull(5, Types.VARCHAR);
-            } else {
-                statement.setString(5, user.getPhoneNumber());
-            }
-            statement.setInt(6, user.getCountryId());
-            statement.setDate(7, java.sql.Date.valueOf(user.getBirthdate()));
             if (user.getBio().isEmpty()) {
-                statement.setNull(8, Types.VARCHAR);
+                statement.setNull(1, Types.VARCHAR);
             } else {
-                statement.setString(8, user.getBio());
+                statement.setString(1, user.getBio());
             }
+
             if (user.getLocation().isEmpty()) {
-                statement.setNull(9, Types.VARCHAR);
+                statement.setNull(2, Types.VARCHAR);
             } else {
-                statement.setString(9, user.getLocation());
+                statement.setString(2, user.getLocation());
             }
+
             if (user.getWebsite().isEmpty()) {
-                statement.setNull(10, Types.VARCHAR);
+                statement.setNull(3, Types.VARCHAR);
             } else {
-                statement.setString(10, user.getWebsite());
+                statement.setString(3, user.getWebsite());
             }
-            statement.setTimestamp(11, Timestamp.valueOf(LocalDateTime.now()));
-            statement.setInt(12, user.getId());
+            statement.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setInt(5, user.getId());
             statement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
