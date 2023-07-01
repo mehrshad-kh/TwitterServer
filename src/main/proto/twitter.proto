@@ -15,7 +15,7 @@ service Twitter {
   rpc IsTakenPhoneNumber(MKString) returns (MKBoolean) {}
   rpc SubmitHeaderPhoto(HeaderPhoto) returns (MKEmpty) {}
   rpc RetrieveHeaderPhoto(User) returns (HeaderPhoto) {}
-  rpc SubmitProfilePhoto(ProfilePhoto) returns (MKBoolean) {}
+  rpc SubmitProfilePhoto(ProfilePhoto) returns (MKEmpty) {}
   rpc RetrieveProfilePhoto(User) returns (ProfilePhoto) {}
   rpc UploadTweetPhoto(TweetPhoto) returns (MKBoolean) {}
   rpc RetrieveTweetPhotos(Tweet) returns (stream MKFile) {}

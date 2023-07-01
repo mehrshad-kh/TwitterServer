@@ -383,8 +383,9 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
     }
 
     @Override
-    public void submitProfilePhoto(ProfilePhoto profilePhoto, StreamObserver<MKBoolean> responseObserver) {
-        boolean result;
+    public void submitProfilePhoto(ProfilePhoto profilePhoto, StreamObserver<MKEmpty> responseObserver) {
+        logger.info("submitProfilePhoto() was called.");
+
         byte[] bytes = profilePhoto.getPhoto().getBytes().toByteArray();
         String query = "INSERT INTO profile_photos (filename) " +
                        "VALUES  (?);";
@@ -417,18 +418,22 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             statement2.setInt(2, profilePhotoId);
             statement2.execute();
             statement2.close();
-            result = true;
         } catch (IOException e) {
             logger.log(Level.SEVERE, "*** IO error occurred");
             e.printStackTrace();
-            result = false;
+            Status errorStatus = Status.INTERNAL.withDescription("Could not store file.");
+            responseObserver.onError(errorStatus.asRuntimeException());
+            return;
         }
         catch (SQLException e) {
             logger.log(Level.SEVERE, "*** SQL error occurred");
             e.printStackTrace();
-            result = false;
+            Status errorStatus = Status.INTERNAL.withDescription("Database error occurred.");
+            responseObserver.onError(errorStatus.asRuntimeException());
+            return;
         }
-        responseObserver.onNext(MKBoolean.newBuilder().setValue(result).build());
+
+        responseObserver.onNext(MKEmpty.getDefaultInstance());
         responseObserver.onCompleted();
     }
 
@@ -546,7 +551,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             ResultSet resultSet = statement.executeQuery();
 
             if (resultSet.next()) {
-                byte[] bytes = Files.readAllBytes(Paths.get("user-files/profile-photos" + resultSet.getString("filename")));
+                byte[] bytes = Files.readAllBytes(Paths.get("user-files/profile-photos/" + resultSet.getString("filename")));
                 MKFile file = MKFile.newBuilder()
                         .setBytes(ByteString.copyFrom(bytes))
                         .setExtension(resultSet.getString("filename").substring(resultSet.getString("filename").lastIndexOf(".")))
