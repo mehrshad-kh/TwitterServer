@@ -35,6 +35,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
     @Override
     public void getDailyBriefing(User user, StreamObserver<Tweet> responseObserver) {
+        System.out.printf("getDailyBriefing() was called by the client.%n");
         String query = "SELECT id, text, retweet_id, sender_id, date_created " +
                 "FROM tweets " +
                 "WHERE id IN ( " +
@@ -252,7 +253,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
         String randomFilename = UUID.randomUUID().toString();
         Path destinationPath
-                = Paths.get("user-files/photos/" +
+                = Paths.get("C:\\Users\\amirsalar.abedini\\Desktop\\server\\photos" +
                 String.format("%s.%s",
                         randomFilename,
                         tweetPhoto.getPhoto().getExtension()));
@@ -310,9 +311,9 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
     }
 
     @Override
-    public void sendTweet(Tweet tweet, StreamObserver<MKBoolean> responseObserver){
+    public void sendTweet(Tweet tweet, StreamObserver<Tweet> responseObserver){
         String query = "INSERT INTO tweets (text, sender_id, retweet_id, date_created) " +
-                       "VALUES (?, ?, ?, ?);";
+                       "VALUES (?, ?, ?, ?) RETURNING id;";
 
         try {
             PreparedStatement statement = connection.prepareStatement(query);
@@ -320,14 +321,25 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             statement.setInt(2, tweet.getSenderId());
             statement.setNull(3, Types.INTEGER);
             statement.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()));
-            statement.execute();
+            ResultSet resultSet =  statement.executeQuery();
+            //the result is tweet id which is auto generated
+            resultSet.next();
+            tweet = tweet.toBuilder()
+                    .setId(resultSet.getInt("id"))
+                    .build();
             statement.close();
         } catch (SQLException e) {
             e.printStackTrace();
             return;
         }
 
-        responseObserver.onNext(MKBoolean.newBuilder().setValue(true).build());
+        responseObserver.onNext(Tweet.newBuilder()
+                .setId(tweet.getId())
+                .setText(tweet.getText())
+                .setSenderId(tweet.getSenderId())
+                .setRetweetId(tweet.getRetweetId())
+                .setDateCreated(tweet.getDateCreated())
+                .build());
         responseObserver.onCompleted();
     }
 
