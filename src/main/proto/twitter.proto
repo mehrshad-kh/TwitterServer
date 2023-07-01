@@ -19,7 +19,7 @@ service Twitter {
   rpc RetrieveProfilePhoto(User) returns (ProfilePhoto) {}
   rpc UploadTweetPhoto(TweetPhoto) returns (MKBoolean) {}
   rpc RetrieveTweetPhotos(Tweet) returns (stream MKFile) {}
-  rpc SendTweet(Tweet) returns (MKBoolean) {}
+  rpc SendTweet(Tweet) returns (Tweet) {}
   rpc SendRetweet(Tweet) returns (MKBoolean) {}
   rpc SendQuote(Tweet) returns (MKBoolean) {}
   rpc SignIn(User) returns (User) {}
