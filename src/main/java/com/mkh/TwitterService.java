@@ -584,7 +584,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
             if (resultSet.next()) {
                 byte[] bytes = Files.readAllBytes(
-                        Paths.get("user-files/header-photos" +
+                        Paths.get("user-files/header-photos/" +
                                 resultSet.getString("filename")));
                 MKFile file = MKFile.newBuilder()
                         .setBytes(ByteString.copyFrom(bytes))
