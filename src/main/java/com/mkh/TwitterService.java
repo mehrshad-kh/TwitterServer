@@ -35,10 +35,10 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
     @Override
     public void getDailyBriefing(User user, StreamObserver<Tweet> responseObserver) {
-        System.out.println("getDailyBriefing() was called by the client.");
+        logger.info("getDailyBriefing() was called.");
 
         String query = "SELECT id, text, retweet_id, sender_id, date_created " +
-                "FROM tweets WHERE id = " + user.getId() + ";";
+                "FROM tweets WHERE sender_id = ?;";
 //        String query = "SELECT id, text, retweet_id, sender_id, date_created " +
 //                "FROM tweets " +
 //                "WHERE id IN ( " +
@@ -71,8 +71,8 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         try {
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, user.getId());
-            statement.setInt(2, user.getId());
-            statement.setInt(3, user.getId());
+//            statement.setInt(2, user.getId());
+//            statement.setInt(3, user.getId());
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 int id = resultSet.getInt(1);
@@ -256,7 +256,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
         String randomFilename = UUID.randomUUID().toString();
         Path destinationPath
-                = Paths.get("C:\\Users\\amirsalar.abedini\\Desktop\\server\\photos" +
+                = Paths.get("user-files/photos/" +
                 String.format("%s.%s",
                         randomFilename,
                         tweetPhoto.getPhoto().getExtension()));
@@ -288,8 +288,12 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
     @Override
     public void retrieveTweetPhotos(Tweet tweet, StreamObserver<MKFile> responseObserver) {
+        logger.info("retrieveTweetPhotos() was called.");
+
         String query = "SELECT filename " +
-                "FROM tweet_photos " +
+                "FROM photos " +
+                "INNER JOIN tweet_photos " +
+                "ON photos.id = tweet_photos.photo_id " +
                 "WHERE tweet_id = ?;";
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
@@ -1013,6 +1017,30 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             return;
         }
 
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void hasTweetPhoto(Tweet tweet, StreamObserver<MKBoolean> responseObserver) {
+        int count = 0;
+
+        String query = "SELECT COUNT(*) " +
+                "FROM tweet_photos " +
+                "WHERE tweet_id = ?;";
+
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, tweet.getId());
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                count = resultSet.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        MKBoolean response = MKBoolean.newBuilder().setValue(count > 0).build();
+        responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
 }

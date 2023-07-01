@@ -38,6 +38,7 @@ service Twitter {
   rpc RetrieveLikeCount(Tweet) returns (MKInteger) {}
   rpc RetrieveReplyCount(Tweet) returns (MKInteger) {}
   rpc RetrieveRetweetCount(Tweet) returns (MKInteger) {}
+  rpc HasTweetPhoto(Tweet) returns (MKBoolean) {}
 }
 
 message AuthResponse {
