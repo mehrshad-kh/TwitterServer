@@ -40,6 +40,9 @@ service Twitter {
   rpc RetrieveRetweetCount(Tweet) returns (MKInteger) {}
   rpc HasTweetPhoto(Tweet) returns (MKBoolean) {}
   rpc HasProfilePhoto(User) returns (MKBoolean) {}
+  rpc UploadTweetVideo(TweetVideo) returns (MKEmpty) {}
+  rpc RetrieveTweetVideo(Tweet) returns (TweetVideo) {}
+  rpc RetrieveUser(MKInteger) returns (User) {}
 }
 
 message AuthResponse {
@@ -78,6 +81,11 @@ message HeaderPhoto {
 message TweetPhoto {
   int32 tweet_id = 1;
   MKFile photo = 2;
+}
+
+message TweetVideo {
+  int32 tweet_id = 1;
+  MKFile video = 2;
 }
 
 message User {

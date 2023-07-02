@@ -692,6 +692,8 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
     @Override
     public void retrieveLikeCount(Tweet tweet, StreamObserver<MKInteger> responseObserver) {
+        logger.info("retrieveLikeCount() was called.");
+
         int count;
         String query = "SELECT COUNT(user_id) " +
                 "FROM likes " +
@@ -721,6 +723,8 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
     @Override
     public void retrieveReplyCount(Tweet tweet, StreamObserver<MKInteger> responseObserver) {
+        logger.info("retrieveReplyCount() was called.");
+
         int count;
         String query = "SELECT COUNT(user_id) " +
                 "FROM replies " +
@@ -749,6 +753,8 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
     @Override
     public void retrieveRetweetCount(Tweet tweet, StreamObserver<MKInteger> responseObserver) {
+        logger.info("retrieveRetweetCount() was called.");
+
         int count;
         String query = "SELECT COUNT(id) " +
                 "FROM tweets " +
@@ -817,6 +823,8 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
     @Override
     public void follow(FollowRequest followRequest, StreamObserver<MKBoolean> responseObserver) {
+        logger.info("follow() was called.");
+
         String query = "INSERT INTO followings (follower_id, followee_id, date_created) " +
                 "VALUES (?, ?, ?);";
 
@@ -1081,7 +1089,6 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         statement.executeUpdate();
         statement.close();
     }
-
     public List<DirectMessage> getDirectMessagesBySender(int senderId) throws SQLException {
         String sql = "SELECT * FROM direct_messages WHERE sender_id = ?";
         PreparedStatement statement = connection.prepareStatement(sql);
@@ -1102,8 +1109,7 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         statement.close();
         return directMessages;
     }
-
-    public List<DirectMessage> getDirectMessagesByReceiver(int receiverId) throws SQLException {
+    private List<DirectMessage> getDirectMessagesByReceiver(int receiverId) throws SQLException {
         String sql = "SELECT * FROM direct_messages WHERE receiver_id = ?";
         PreparedStatement statement = connection.prepareStatement(sql);
         statement.setInt(1, receiverId);
@@ -1122,13 +1128,85 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         statement.close();
         return directMessages;
     }
-
-    public void deleteDirectMessage(int directMessageId) throws SQLException {
+    private void deleteDirectMessage(int directMessageId) throws SQLException {
         String sql = "DELETE FROM direct_messages WHERE id = ?";
         PreparedStatement statement = connection.prepareStatement(sql);
         statement.setInt(1, directMessageId);
         statement.executeUpdate();
         statement.close();
+    }
+
+    // Lacks tests.
+    public void uploadTweetVideo(TweetVideo tweetVideo, StreamObserver<MKEmpty> responseObserver) {
+        String query = "INSERT INTO videos (filename, extension) " +
+                "VALUES (?, ?) " +
+                "RETURNING id;";
+
+        String randomFilename = UUID.randomUUID().toString();
+        Path destinationPath
+                = Paths.get("user-files/videos/" +
+                String.format("%s.%s",
+                        randomFilename,
+                        tweetVideo.getVideo().getExtension()));
+
+        try {
+            Files.write(destinationPath, tweetVideo.getVideo().getBytes().toByteArray());
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, randomFilename);
+            statement.setString(2, tweetVideo.getVideo().getExtension());
+            ResultSet resultSet = statement.executeQuery();
+            resultSet.next();
+            int id = resultSet.getInt(1);
+            statement.close();
+
+            statement = connection.prepareStatement(query);
+            query = "INSERT INTO tweet_videos (tweet_id, video_id) " +
+                    "VALUES (?, ?);";
+            statement.setInt(1, tweetVideo.getTweetId());
+            statement.setInt(2, id);
+            statement.execute();
+            statement.close();
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "*** IO error occurred");
+            e.printStackTrace();
+            Status errorStatus = Status.INTERNAL.withDescription("Could not store file.");
+            responseObserver.onError(errorStatus.asRuntimeException());
+            return;
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "*** SQL error occurred");
+            e.printStackTrace();
+            Status errorStatus = Status.INTERNAL.withDescription("Database error occurred.");
+            responseObserver.onError(errorStatus.asRuntimeException());
+            return;
+        }
+
+        responseObserver.onNext(MKEmpty.getDefaultInstance());
+        responseObserver.onCompleted();
+    }
+    @Override
+    public void retrieveUser(MKInteger mkIntegerId, StreamObserver<User> responseObserver){
+        int id = mkIntegerId.getValue();
+        String query = "SELECT * FROM users WHERE id = ?;";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, id);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                User user = User.newBuilder()
+                .setId(resultSet.getInt("id"))
+                .setUsername(resultSet.getString("username"))
+                .setPassword(resultSet.getString("password"))
+                .setEmail(resultSet.getString("email"))
+                .setDateCreated(resultSet.getString("date_created"))
+                .setFirstName(resultSet.getString("first_name"))
+                .setLastName(resultSet.getString("last_name"))
+                .build();
+                responseObserver.onNext(user);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+        responseObserver.onCompleted();
     }
 }
 
