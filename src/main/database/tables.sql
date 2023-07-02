@@ -122,3 +122,15 @@ CREATE TABLE IF NOT EXISTS views (
     tweet_id INTEGER REFERENCES tweets (id),
     date_time TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS videos (
+    id SERIAL PRIMARY KEY,
+    filename CHAR(36),
+    extension VARCHAR(10)
+);
+
+CREATE TABLE IF NOT EXISTS tweet_videos (
+    id SERIAL PRIMARY KEY,
+    tweet_id INTEGER REFERENCES tweets (id),
+    video_id INTEGER REFERENCES videos (id)
+);
