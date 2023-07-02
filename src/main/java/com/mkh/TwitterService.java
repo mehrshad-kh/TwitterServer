@@ -15,6 +15,7 @@ import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -1027,6 +1028,29 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
         responseObserver.onCompleted();
     }
+    @Override
+    public void hasProfilePhoto(User user, StreamObserver<MKBoolean> responseObserver){
+        int count = 0;
+
+        String query = "SELECT COUNT(*) " +
+                "FROM user_profile_photos " +
+                "WHERE user_id = ?;" ;
+
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, user.getId());
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                count = resultSet.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+        MKBoolean response = MKBoolean.newBuilder().setValue(count > 0).build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
 
     @Override
     public void hasTweetPhoto(Tweet tweet, StreamObserver<MKBoolean> responseObserver) {
@@ -1051,5 +1075,65 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
+    public void addDirectMessage(DirectMessage directMessage) throws SQLException {
+        String sql = "INSERT INTO direct_messages (sender_id, receiver_id, text, date_created) VALUES (?, ?, ?, ?)";
+        PreparedStatement statement = connection.prepareStatement(sql);
+        statement.setInt(1, directMessage.getSenderId());
+        statement.setInt(2, directMessage.getRecipientId());
+        statement.setString(3, directMessage.getText());
+        statement.setString(4, LocalDateTime.now().format(dateTimeFormatter));
+        statement.executeUpdate();
+        statement.close();
+    }
+
+    public List<DirectMessage> getDirectMessagesBySender(int senderId) throws SQLException {
+        String sql = "SELECT * FROM direct_messages WHERE sender_id = ?";
+        PreparedStatement statement = connection.prepareStatement(sql);
+        statement.setInt(1, senderId);
+        ResultSet resultSet = statement.executeQuery();
+        List<DirectMessage> directMessages = new ArrayList<>();
+        while (resultSet.next()) {
+            DirectMessage directMessage = DirectMessage.newBuilder()
+            .setId(resultSet.getInt("id"))
+            .setSenderId(resultSet.getInt("sender_id"))
+            .setRecipientId(resultSet.getInt("receiver_id"))
+            .setText(resultSet.getString("text"))
+            .setDateCreated(resultSet.getString("date_created")).build() ;
+            directMessages.add(directMessage);
+
+        }
+        resultSet.close();
+        statement.close();
+        return directMessages;
+    }
+
+    public List<DirectMessage> getDirectMessagesByReceiver(int receiverId) throws SQLException {
+        String sql = "SELECT * FROM direct_messages WHERE receiver_id = ?";
+        PreparedStatement statement = connection.prepareStatement(sql);
+        statement.setInt(1, receiverId);
+        ResultSet resultSet = statement.executeQuery();
+        List<DirectMessage> directMessages = new ArrayList<>();
+        while (resultSet.next()) {
+            DirectMessage directMessage = DirectMessage.newBuilder()
+            .setId(resultSet.getInt("id"))
+            .setSenderId(resultSet.getInt("sender_id"))
+            .setRecipientId(resultSet.getInt("receiver_id"))
+            .setText(resultSet.getString("text"))
+            .setDateCreated(resultSet.getString("date_created")).build();
+            directMessages.add(directMessage);
+        }
+        resultSet.close();
+        statement.close();
+        return directMessages;
+    }
+
+    public void deleteDirectMessage(int directMessageId) throws SQLException {
+        String sql = "DELETE FROM direct_messages WHERE id = ?";
+        PreparedStatement statement = connection.prepareStatement(sql);
+        statement.setInt(1, directMessageId);
+        statement.executeUpdate();
+        statement.close();
+    }
 }
+
 
