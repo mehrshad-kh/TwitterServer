@@ -1085,7 +1085,6 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         statement.executeUpdate();
         statement.close();
     }
-
     public List<DirectMessage> getDirectMessagesBySender(int senderId) throws SQLException {
         String sql = "SELECT * FROM direct_messages WHERE sender_id = ?";
         PreparedStatement statement = connection.prepareStatement(sql);
@@ -1106,7 +1105,6 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         statement.close();
         return directMessages;
     }
-
     private List<DirectMessage> getDirectMessagesByReceiver(int receiverId) throws SQLException {
         String sql = "SELECT * FROM direct_messages WHERE receiver_id = ?";
         PreparedStatement statement = connection.prepareStatement(sql);
@@ -1126,7 +1124,6 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         statement.close();
         return directMessages;
     }
-
     private void deleteDirectMessage(int directMessageId) throws SQLException {
         String sql = "DELETE FROM direct_messages WHERE id = ?";
         PreparedStatement statement = connection.prepareStatement(sql);
