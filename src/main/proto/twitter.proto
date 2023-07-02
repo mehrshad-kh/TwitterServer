@@ -39,6 +39,7 @@ service Twitter {
   rpc RetrieveReplyCount(Tweet) returns (MKInteger) {}
   rpc RetrieveRetweetCount(Tweet) returns (MKInteger) {}
   rpc HasTweetPhoto(Tweet) returns (MKBoolean) {}
+  rpc HasProfilePhoto(User) returns (MKBoolean) {}
 }
 
 message AuthResponse {
@@ -148,4 +149,11 @@ message BlockRequest {
   int32 blocked_id = 4;
   string date_created = 5;
   string date_deleted= 6;
+}
+message DirectMessage {
+  int32 id = 1;
+  string text = 2;
+  int32 sender_id = 3;
+  int32 recipient_id = 4;
+  string date_created = 5;
 }
