@@ -212,7 +212,11 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
             statement.setString(3, user.getUsername());
             statement.setString(4, user.getPassword());
             statement.setString(5, user.getEmail());
-            statement.setString(6, user.getPhoneNumber());
+            if (user.getPhoneNumber().equals("")) {
+                statement.setNull(6, Types.VARCHAR);
+            } else {
+                statement.setString(6, user.getPhoneNumber());
+            }
             statement.setInt(7, user.getCountryId());
             statement.setDate(8, java.sql.Date.valueOf(user.getBirthdate()));
             statement.setTimestamp(9, Timestamp.valueOf(now));
