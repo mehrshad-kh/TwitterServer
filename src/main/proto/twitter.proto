@@ -42,6 +42,7 @@ service Twitter {
   rpc HasProfilePhoto(User) returns (MKBoolean) {}
   rpc UploadTweetVideo(TweetVideo) returns (MKEmpty) {}
   rpc RetrieveTweetVideo(Tweet) returns (TweetVideo) {}
+  rpc RetrieveUser(MKInteger) returns (User) {}
 }
 
 message AuthResponse {

@@ -1179,6 +1179,31 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
         responseObserver.onNext(MKEmpty.getDefaultInstance());
         responseObserver.onCompleted();
     }
+    @Override
+    public void retrieveUser(MKInteger mkIntegerId, StreamObserver<User> responseObserver){
+        int id = mkIntegerId.getValue();
+        String query = "SELECT * FROM users WHERE id = ?;";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, id);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                User user = User.newBuilder()
+                .setId(resultSet.getInt("id"))
+                .setUsername(resultSet.getString("username"))
+                .setPassword(resultSet.getString("password"))
+                .setEmail(resultSet.getString("email"))
+                .setDateCreated(resultSet.getString("date_created"))
+                .setFirstName(resultSet.getString("first_name"))
+                .setLastName(resultSet.getString("last_name"))
+                .build();
+                responseObserver.onNext(user);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+        responseObserver.onCompleted();
+    }
 }
 
 
