@@ -687,6 +687,8 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
     @Override
     public void retrieveLikeCount(Tweet tweet, StreamObserver<MKInteger> responseObserver) {
+        logger.info("retrieveLikeCount() was called.");
+
         int count;
         String query = "SELECT COUNT(user_id) " +
                 "FROM likes " +
@@ -716,6 +718,8 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
     @Override
     public void retrieveReplyCount(Tweet tweet, StreamObserver<MKInteger> responseObserver) {
+        logger.info("retrieveReplyCount() was called.");
+
         int count;
         String query = "SELECT COUNT(user_id) " +
                 "FROM replies " +
@@ -744,6 +748,8 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
     @Override
     public void retrieveRetweetCount(Tweet tweet, StreamObserver<MKInteger> responseObserver) {
+        logger.info("retrieveRetweetCount() was called.");
+
         int count;
         String query = "SELECT COUNT(id) " +
                 "FROM tweets " +
@@ -812,6 +818,8 @@ public final class TwitterService extends TwitterGrpc.TwitterImplBase {
 
     @Override
     public void follow(FollowRequest followRequest, StreamObserver<MKBoolean> responseObserver) {
+        logger.info("follow() was called.");
+
         String query = "INSERT INTO followings (follower_id, followee_id, date_created) " +
                 "VALUES (?, ?, ?);";
 
